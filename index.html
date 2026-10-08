@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salesforce – Calculadora de créditos de WhatsApp</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+<style>
+:root{
+  --blue:#0176D3; --navy:#032D60; --blue-50:#EAF5FE; --blue-100:#CFE9FE;
+  --ink:#181818; --muted:#5C5C5C; --line:#E5E5E5; --bg:#F3F6FA; --card:#fff;
+  --mk:#DD7A01; --mk-50:#FEF1E4; --sv:#2E844A; --sv-50:#EBF7E6; --ut:#0176D3; --ut-50:#EAF5FE;
+  --au:#7526E3; --au-50:#F2ECFC; --fr:#747474; --fr-50:#F3F3F3;
+  --radius:14px; --shadow:0 1px 2px rgba(3,45,96,.06),0 6px 18px rgba(3,45,96,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"Salesforce Sans","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{margin:0 0 .4em;line-height:1.25;color:var(--navy)}
+h2{font-size:1.35rem} h3{font-size:1.08rem} h4{font-size:.98rem}
+p{margin:.3em 0 .8em}
+small,.muted{color:var(--muted)}
+a{color:var(--blue)}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+
+/* HERO */
+.hero{background:radial-gradient(1200px 400px at 90% -20%,#1B96FF55,transparent),linear-gradient(135deg,var(--navy),#0B5CAB);color:#fff;padding:26px 0 70px}
+.hero .wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.logo{width:56px;height:56px;flex:0 0 56px}
+.logo-sf{height:64px;width:auto;flex:0 0 auto;background:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+@media(max-width:640px){.logo-sf{height:48px;padding:6px 8px}}
+.hero h1{color:#fff;font-size:1.55rem;margin:0}
+.hero p{margin:.2em 0 0;color:#D8E6FE;font-size:.95rem}
+.hero .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.78rem;font-weight:600;background:#ffffff1f;border:1px solid #ffffff33;color:#fff}
+
+/* TABS */
+.tabs-shell{margin-top:-48px}
+.tablist{display:flex;gap:4px;background:#fff;border-radius:var(--radius) var(--radius) 0 0;padding:6px 6px 0;box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:thin;position:sticky;top:0;z-index:30}
+.tab{appearance:none;border:0;background:transparent;padding:12px 16px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;border-radius:10px 10px 0 0;white-space:nowrap;position:relative;transition:color .2s,background .2s}
+.tab:hover{color:var(--navy);background:var(--blue-50)}
+.tab[aria-selected="true"]{color:var(--blue)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--blue)}
+.tab:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.panel{background:#fff;border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow);padding:22px;min-height:400px}
+.panel[hidden]{display:none}
+.panel.anim{animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* CARDS / GRID */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr} .g3{grid-template-columns:1fr} .g4{grid-template-columns:1fr}
+@media(min-width:720px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g4{grid-template-columns:1fr 1fr}}
+@media(min-width:1060px){.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.card.soft{background:#FAFCFF}
+.section{margin:26px 0 0}
+.section-title{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+.step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:.8rem;font-weight:700;margin-right:6px}
+label.lbl{display:block;font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+input.in,select.in,textarea.in{width:100%;font:inherit;padding:9px 11px;border:1px solid #C9C9C9;border-radius:9px;background:#fff;color:var(--ink);transition:border .15s,box-shadow .15s}
+input.in:focus,select.in:focus,textarea.in:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px #0176D333}
+textarea.in{resize:vertical;min-height:40px;font-size:.85rem}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.btn{appearance:none;border:1px solid var(--blue);background:var(--blue);color:#fff;font:inherit;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:transform .1s,background .2s}
+.btn:hover{background:#014486}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:#fff;color:var(--blue)}
+.btn.ghost:hover{background:var(--blue-50)}
+.btn.sm{padding:6px 10px;font-size:.85rem}
+.btn.danger{background:#fff;border-color:#E5E5E5;color:#BA0517}
+.btn.danger:hover{background:#FEF1EE}
+.btn.big{padding:12px 18px;font-size:1rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--blue-100);background:var(--blue-50);color:var(--navy);border-radius:999px;padding:3px 10px;font-size:.8rem;cursor:pointer;font-weight:600}
+.chip:hover{border-color:var(--blue)}
+.seg{display:inline-flex;border:1px solid #C9C9C9;border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:9px 14px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--blue);color:#fff}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-mk{background:var(--mk-50);color:#8C4B02;border:1px solid #F9C99A}
+.b-sv{background:var(--sv-50);color:#22683E;border:1px solid #A9DBA0}
+.b-ut{background:var(--ut-50);color:#014486;border:1px solid #A9D3F7}
+.b-au{background:var(--au-50);color:#5A1BA9;border:1px solid #CDB4F5}
+.b-fr{background:var(--fr-50);color:#444;border:1px solid #D5D5D5}
+.b-tbd{background:#FFF8E1;color:#8A6100;border:1px solid #F3D57A}
+.b-sku-mk{background:linear-gradient(135deg,#FE9339,#DD7A01);color:#fff}
+.b-sku-sv{background:linear-gradient(135deg,#45C65A,#2E844A);color:#fff}
+.b-legacy{background:#ECEBEA;color:#5C5C5C;text-decoration:line-through}
+
+/* TOOLTIP */
+.tip{position:relative;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--blue-50);color:var(--blue);font-size:.72rem;font-weight:800;font-style:italic;font-family:Georgia,serif;cursor:help;border:1px solid var(--blue-100);vertical-align:middle;flex:0 0 18px}
+.tip .tipbox{position:absolute;z-index:50;left:50%;top:calc(100% + 8px);transform:translateX(-50%);width:min(290px,78vw);background:var(--navy);color:#fff;font:400 .8rem/1.45 "Inter",-apple-system,sans-serif;font-style:normal;padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .15s;text-align:left;text-transform:none;letter-spacing:0}
+.tip:hover .tipbox,.tip:focus .tipbox,.tip.open .tipbox{opacity:1;pointer-events:auto}
+
+/* COMBOBOX */
+.combo{position:relative}
+.combo-btn{width:100%;display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #C9C9C9;border-radius:9px;background:#fff;font:inherit;cursor:pointer;text-align:left}
+.combo-btn:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px #0176D333}
+.combo-btn .flag{font-size:1.3rem}
+.combo-btn .caret{margin-left:auto;color:var(--muted)}
+.combo-pop{position:absolute;z-index:60;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(3,45,96,.18);padding:8px}
+.combo-pop ul{list-style:none;margin:6px 0 0;padding:0;max-height:280px;overflow:auto}
+.combo-pop li{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;cursor:pointer;font-size:.9rem}
+.combo-pop li .iso{margin-left:auto;font-size:.75rem;color:var(--muted);font-weight:700}
+.combo-pop li[aria-selected="true"],.combo-pop li:hover{background:var(--blue-50)}
+.combo-pop li.cur{font-weight:700;color:var(--blue)}
+
+/* CATEGORY CARDS */
+.catcard{border-radius:var(--radius);padding:14px;border:1px solid var(--line);background:#fff;position:relative;overflow:visible}
+.catcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:var(--radius) 0 0 var(--radius);background:var(--c)}
+.catcard .head{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy)}
+.catcard .mult{font-size:1.7rem;font-weight:800;color:var(--c);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:6px}
+.catcard .mult small{font-size:.75rem;font-weight:600;color:var(--muted)}
+.catcard .per{font-size:.82rem;color:var(--muted);margin-bottom:8px}
+
+/* TABLES */
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{background:var(--blue);color:#fff;font-weight:700;text-align:left;padding:10px;font-size:.82rem;white-space:nowrap}
+td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:middle}
+tr:nth-child(even) td{background:#FAFCFF}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tfoot td,tr.total td{background:var(--navy)!important;color:#fff;font-weight:800}
+/* CASOS DE USO: lista con drag & drop */
+.addrow{display:grid;gap:10px;grid-template-columns:1fr;padding:14px;border:1px dashed #9CC7F1;border-radius:12px;background:#F7FBFF;margin-bottom:12px}
+@media(min-width:900px){.addrow{grid-template-columns:2fr 1.2fr .8fr .8fr 2.6fr auto;align-items:end}}
+.rules{border:1px solid #F9C99A;background:linear-gradient(135deg,#FFF8F0,#fff);border-radius:var(--radius);padding:16px}
+.rules-grid{display:grid;gap:12px;grid-template-columns:1fr;margin-top:10px}
+@media(min-width:720px){.rules-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1180px){.rules-grid{grid-template-columns:repeat(4,1fr)}}
+.rule{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.9rem}
+.rule .ri{font-size:1.5rem;line-height:1}
+.rule b.t{display:block;color:var(--navy);margin:6px 0 4px}
+.rule-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;font-size:.88rem}
+.rule-flow .node{padding:7px 11px;border-radius:10px;font-weight:700}
+.rule-flow .arr{color:var(--muted);font-weight:800}
+.lib{border:1px solid var(--blue-100);background:linear-gradient(180deg,#F7FBFF,#fff);border-radius:var(--radius);padding:14px}
+.lib-filters{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.lib-filters button{border:1px solid #D5D5D5;background:#fff;border-radius:999px;padding:4px 11px;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
+.lib-filters button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.lib-items{display:flex;flex-wrap:wrap;gap:8px}
+.pal-item{display:inline-flex;align-items:center;gap:7px;padding:7px 11px 7px 8px;border-radius:10px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--c);font:inherit;font-size:.85rem;font-weight:600;color:var(--navy);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;transition:box-shadow .15s,transform .15s;text-align:left}
+.pal-item:hover,.pal-item:focus-visible{box-shadow:0 4px 12px rgba(3,45,96,.14);transform:translateY(-1px);outline:0}
+.pal-item .grip{color:#A0A0A0;letter-spacing:-2px}
+.pal-item .plus{color:var(--blue);font-weight:800}
+.hint-touch{display:none}
+@media(pointer:coarse){.pal-item{touch-action:manipulation;cursor:pointer}.pal-item .grip{display:none}.hint-fine{display:none}.hint-touch{display:inline}}
+.ghost{position:fixed;z-index:999;pointer-events:none;transform:translate(-50%,-50%) rotate(-2deg);box-shadow:0 14px 30px rgba(3,45,96,.3)}
+.caselist{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;transition:outline-color .2s}
+.caselist.drop-on{outline:2px dashed var(--blue);outline-offset:3px}
+.case-row,.case-head{display:grid;grid-template-columns:34px minmax(280px,1fr) 150px 104px 118px 112px 100px 116px 100px 40px;gap:10px;padding:12px}
+.case-head{background:var(--blue);color:#fff;font-size:.84rem;align-items:end;padding:12px 12px 10px;user-select:none;-webkit-user-select:none}
+.case-head>span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.case-head b{font-weight:700;line-height:1.2;display:inline-flex;align-items:center;gap:5px}
+.case-head small{font-size:.7rem;font-weight:500;color:#D8E6FE;line-height:1.25;text-wrap:balance}
+.case-head .n{text-align:right;align-items:flex-end}
+.case-head .n b{justify-content:flex-end}
+.case-head .tip{background:#fff;border-color:#fff}
+.case-row{grid-template-areas:"h c t m f v r cr u d";align-items:start;border-top:1px solid var(--line);background:#fff;box-shadow:inset 5px 0 0 var(--c);position:relative}
+.case-row:first-child{border-top:0}
+.case-row:nth-child(even){background:#FAFCFF}
+.case-row>.f{grid-area:f}.case-row>.h{grid-area:h}.case-row>.c{grid-area:c}.case-row>.t{grid-area:t}.case-row>.m{grid-area:m}.case-row>.v{grid-area:v}.case-row>.r{grid-area:r}.case-row>.cr{grid-area:cr}.case-row>.u{grid-area:u}.case-row>.d{grid-area:d}
+.case-row .val{text-align:right;font-variant-numeric:tabular-nums;padding-top:9px;font-weight:600}
+.case-row .cap{display:none;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
+.case-row input.in,.case-row select.in{padding:8px 9px;font-size:.88rem}
+.case-row textarea.f-name{font-weight:700;color:var(--navy);font-size:.98rem;line-height:1.35;resize:none;overflow:hidden;min-height:40px}
+.case-row textarea.f-desc{margin-top:6px;font-size:.88rem;line-height:1.5;resize:vertical;overflow:hidden;min-height:64px;color:#3E3E3C;background:#FCFCFC}
+.handle{width:30px;height:40px;border:1px solid transparent;border-radius:8px;background:transparent;cursor:grab;touch-action:none;color:#9A9A9A;font-size:1.05rem;letter-spacing:-3px;display:grid;place-items:center;padding:0}
+.handle:hover,.handle:focus-visible{background:var(--blue-50);color:var(--blue);border-color:var(--blue-100);outline:0}
+.case-row.dragging{background:#FFFDF2!important;box-shadow:inset 5px 0 0 var(--c),0 12px 28px rgba(3,45,96,.25);z-index:5}
+body.is-dragging,body.is-dragging *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
+.drop-ph{height:58px;margin:6px 10px;border:2px dashed var(--blue);border-radius:10px;background:var(--blue-50);display:grid;place-items:center;color:var(--blue);font-weight:700;font-size:.85rem}
+.case-total{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:center;background:var(--navy);color:#fff;padding:12px 16px;font-weight:800}
+.case-total span{font-size:.7rem;color:#AACBFF;text-transform:uppercase;letter-spacing:.04em;display:block;font-weight:700}
+.case-total b{font-variant-numeric:tabular-nums;font-size:1.02rem}
+.case-empty{padding:28px;text-align:center;color:var(--muted)}
+@media(max-width:1340px){
+  .case-head{display:none}
+  .case-row>.t,.case-row>.m,.case-row>.f,.case-row>.v,.case-row>.r,.case-row>.cr,.case-row>.u{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
+  .case-row .cap{text-transform:none;letter-spacing:0;font-size:.74rem;line-height:1.25}
+  .case-row{grid-template-columns:32px repeat(7,minmax(0,1fr)) 40px;grid-template-areas:"h c c c c c c c d" "h t m f v r cr u d"}
+  .case-row .cap{display:block}
+  .case-row .val{padding-top:6px;text-align:left}
+}
+@media(max-width:640px){
+  .case-row{grid-template-columns:30px 1fr 1fr 36px;grid-template-areas:"h c c d" "h t t d" "h m f d" "h v r d" "h cr u d";gap:8px;padding:10px 8px}
+  .case-total{gap:8px 18px}
+}
+
+/* KPIs */
+.kpi{border-radius:var(--radius);padding:16px;background:linear-gradient(135deg,#fff,var(--blue-50));border:1px solid var(--blue-100)}
+.kpi .k{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.kpi .v{font-size:1.6rem;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.2;word-break:break-word}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.kpi.hl{background:linear-gradient(135deg,var(--navy),var(--blue));border:0}
+.kpi.hl .k,.kpi.hl .s{color:#D8E6FE}.kpi.hl .v{color:#fff;font-size:1.9rem}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:120px 1fr 70px;gap:8px;align-items:center;font-size:.85rem}
+.bar .track{height:12px;background:#EEF2F6;border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;border-radius:6px;transition:width .4s ease}
+.formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;background:#0B1F3A;color:#E3F0FF;border-radius:12px;padding:14px 16px;overflow:auto;line-height:1.75}
+.formula .hl{color:#FFD27A}.formula .ok{color:#7CE3A0}.formula .c{color:#8FB7E6}
+.callout{border-left:4px solid var(--blue);background:var(--blue-50);padding:12px 14px;border-radius:0 10px 10px 0;font-size:.9rem;margin:10px 0}
+.callout.warn{border-color:#DD7A01;background:#FEF6EC}
+.callout.ok{border-color:#2E844A;background:#F0FAF0}
+
+/* STICKY TOTAL */
+.sticky-total{position:sticky;bottom:10px;z-index:20;margin-top:22px;background:var(--navy);color:#fff;border-radius:14px;padding:12px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 30px rgba(3,45,96,.35)}
+.sticky-total .it{display:flex;flex-direction:column}
+.sticky-total .it b{font-size:1.1rem;font-variant-numeric:tabular-nums}
+.sticky-total .it span{font-size:.72rem;color:#AACBFF;text-transform:uppercase;letter-spacing:.04em}
+.sticky-total .sp{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sticky-total .btn{background:#fff;color:var(--navy);border-color:#fff}
+.pdfstat{font-size:.75rem;color:#AACBFF}
+
+/* EXAMPLES */
+.ex{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff}
+.ex-head{padding:14px 16px;color:#fff;background:var(--c)}
+.ex-head h3{color:#fff;margin:0}
+.ex-head p{margin:.2em 0 0;opacity:.92;font-size:.9rem}
+.ex-body{display:grid;grid-template-columns:1fr;gap:16px;padding:16px}
+@media(min-width:900px){.ex-body{grid-template-columns:1.05fr 1fr}}
+.phone{background:#E9E2D8;background-image:radial-gradient(#d8cfc3 1px,transparent 1px);background-size:14px 14px;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.phone .ph-title{font-size:.78rem;font-weight:700;color:#3b4a54;background:#fff9;border-radius:8px;padding:4px 8px;align-self:center}
+.msg{max-width:88%;padding:8px 10px 6px;border-radius:10px;font-size:.86rem;box-shadow:0 1px 1px rgba(0,0,0,.08);position:relative}
+.msg.biz{background:#fff;align-self:flex-start;border-top-left-radius:2px}
+.msg.user{background:#D9FDD3;align-self:flex-end;border-top-right-radius:2px}
+.msg .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.msg .btns span{font-size:.78rem;color:#0B7EC2;border:1px solid #DDE7EE;border-radius:6px;padding:2px 8px;background:#F7FBFF}
+.msg .charge{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;padding-top:5px;border-top:1px dashed #DDD;font-size:.74rem;font-weight:700}
+.msg .charge .free{color:#2E844A}
+.sysnote{align-self:center;font-size:.74rem;background:#FFF5C4;color:#54471B;border-radius:8px;padding:4px 10px;text-align:center;max-width:92%}
+.calcbox table td{padding:6px 8px;font-size:.86rem}
+.calcbox .tot td{font-weight:800;background:var(--blue-50)!important;color:var(--navy)}
+.vs{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:760px){.vs{grid-template-columns:1fr 1fr}}
+
+/* CONTENT TABS */
+.check{list-style:none;padding:0;margin:0;counter-reset:c}
+.check li{counter-increment:c;display:grid;grid-template-columns:34px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.check li:first-child{border-top:0}
+.check li::before{content:counter(c);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ut);color:#fff;font-weight:800}
+.check li b{color:var(--navy)}
+ul.tight{margin:.3em 0;padding-left:1.2em} ul.tight li{margin:.2em 0}
+.timeline{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+@media(min-width:900px){.timeline{grid-template-columns:repeat(4,1fr)}}
+.tl{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;position:relative}
+.tl .t{font-size:.72rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.04em}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.flow .node{padding:8px 12px;border-radius:10px;font-weight:700;font-size:.85rem}
+.flow .arr{color:var(--muted);font-weight:800}
+.icon-xl{font-size:1.8rem;line-height:1}
+.ref-search{max-width:340px}
+tr.cur td{background:#FFF8E1!important;font-weight:700}
+tr.clk{cursor:pointer}
+tr.clk:hover td{background:var(--blue-50)!important}
+
+footer{padding:26px 0 40px;color:var(--muted);font-size:.82rem;text-align:center}
+.warnbox{display:flex;gap:12px;align-items:flex-start;max-width:900px;margin:0 auto 12px;background:#FEF6EC;border:1px solid #F9C99A;border-left:5px solid #DD7A01;border-radius:12px;padding:14px 16px;text-align:left;color:#3E3E3C;font-size:.9rem}
+.warnbox .wi{font-size:1.5rem;line-height:1}
+.official{display:inline-flex;align-items:center;gap:8px;margin:14px auto 0;padding:11px 18px;border-radius:10px;background:var(--blue);color:#fff!important;font-weight:700;text-decoration:none;font-size:.95rem;box-shadow:var(--shadow)}
+.official:hover{background:#014486}
+footer .note{max-width:900px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+
+/* MOBILE: case table -> cards */
+@media(max-width:820px){
+  .panel{padding:16px}
+  .hero h1{font-size:1.25rem}
+  .bar{grid-template-columns:90px 1fr 60px}
+  .sticky-total .sp{margin-left:0;width:100%}
+  .kpi .v{font-size:1.3rem}.kpi.hl .v{font-size:1.5rem}
+}
+.sticky-total .short{display:none}
+@media(max-width:640px){
+  .sticky-total{padding:10px 12px;gap:12px;bottom:6px}
+  .sticky-total .opt,.pdfstat{display:none}
+  .sticky-total .sp{margin-left:auto;width:auto}
+  .sticky-total .btn.big{padding:9px 12px;font-size:.9rem}
+  .sticky-total .long{display:none}.sticky-total .short{display:inline}
+  .tab{padding:10px 12px;font-size:.9rem}
+  .formula{font-size:.75rem}
+}
+@media print{
+  .hero,.tablist,.sticky-total,.addrow,.no-print,footer .no-print{display:none!important}
+  .panel{box-shadow:none;padding:0}
+  .panel:not(#p-calc){display:none!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="logo-sf" src="https://wp.sfdcdigital.com/en-us/wp-content/uploads/sites/4/2024/11/logo-salesforce.svg?w=1024" alt="Salesforce" width="92" height="64" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true" style="display:none">
+      <defs><linearGradient id="lg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1B96FF"/><stop offset="1" stop-color="#0176D3"/></linearGradient></defs>
+      <rect width="64" height="64" rx="16" fill="#ffffff22"/>
+      <path d="M20 40c-5 0-8-3.4-8-7.6 0-4 3-7.2 7-7.6 1-5.2 5.3-8.8 10.6-8.8 4.2 0 7.8 2.3 9.6 5.8 1-.3 2-.5 3-.5 5.3 0 9.3 4.1 9.3 9.3S47.5 40 42.3 40H20z" fill="url(#lg)" stroke="#fff" stroke-width="2"/>
+      <path d="M28 45l4 6 4-6" fill="#25D366"/>
+      <circle cx="26" cy="31" r="2" fill="#fff"/><circle cx="32" cy="31" r="2" fill="#fff"/><circle cx="38" cy="31" r="2" fill="#fff"/>
+    </svg>
+    <div style="flex:1;min-width:240px">
+      <h1>Salesforce – Calculadora de créditos de WhatsApp</h1>
+      <p>Salesforce Message Credits – WhatsApp · cobro por mensaje entregado según la categoría de la plantilla y el país del destinatario</p>
+      <div class="pills">
+        <span class="pill">📅 Rate Card vigente desde el 1-nov-2026</span>
+        <span class="pill">🌎 142 países + “Other”</span>
+        <span class="pill">📦 Paquetes de 1,000 créditos</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap tabs-shell">
+  <div class="tablist" role="tablist" aria-label="Secciones de la calculadora">
+    <button class="tab" role="tab" id="t-calc" aria-controls="p-calc" aria-selected="true" tabindex="0">🧮 Calculadora</button>
+    <button class="tab" role="tab" id="t-ex" aria-controls="p-ex" aria-selected="false" tabindex="-1">💡 5 ejemplos de cobro</button>
+    <button class="tab" role="tab" id="t-tpl" aria-controls="p-tpl" aria-selected="false" tabindex="-1">🗂️ Plantillas y recomendaciones</button>
+    <button class="tab" role="tab" id="t-how" aria-controls="p-how" aria-selected="false" tabindex="-1">⚙️ Cómo funciona</button>
+    <button class="tab" role="tab" id="t-ref" aria-controls="p-ref" aria-selected="false" tabindex="-1">📚 Referencia / SKUs</button>
+  </div>
+
+  <!-- ============ TAB 1: CALCULADORA ============ -->
+  <section class="panel anim" role="tabpanel" id="p-calc" aria-labelledby="t-calc">
+
+    <div class="section-title" style="margin-top:0">
+      <h2><span class="step">1</span>Configura el escenario</h2>
+      <span class="badge b-ut">SKU unificado: Salesforce Message Credits – WhatsApp (1,000)</span>
+    </div>
+    <div class="grid g4">
+      <div class="card">
+        <label class="lbl" for="client">Cliente / oportunidad</label>
+        <input class="in" id="client" value="" placeholder="Nombre del cliente" maxlength="80">
+        <small>Aparece en el encabezado del PDF.</small>
+      </div>
+      <div class="card">
+        <label class="lbl" id="lbl-country">País del destinatario</label>
+        <div class="combo" id="combo">
+          <button type="button" class="combo-btn" id="comboBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="lbl-country comboBtn"></button>
+          <div class="combo-pop" id="comboPop" hidden>
+            <input class="in" id="comboSearch" placeholder="Buscar país o código ISO…" autocomplete="off" aria-label="Buscar país">
+            <ul role="listbox" id="comboList"></ul>
+          </div>
+        </div>
+        <small>El multiplicador depende del código de país del <b>destinatario</b>.</small>
+      </div>
+      <div class="card">
+        <label class="lbl" for="price">Valor del paquete (USD por 1,000 créditos)</label>
+        <input class="in num" id="price" type="number" min="0" step="0.01" value="0.90" inputmode="decimal">
+        <small>Ingresa el valor negociado por paquete de 1,000 créditos.</small>
+      </div>
+      <div class="card">
+        <label class="lbl">Periodo de cálculo</label>
+        <div class="seg" role="group" aria-label="Periodo">
+          <button type="button" data-period="annual" aria-pressed="true">Anual (×12)</button>
+          <button type="button" data-period="monthly" aria-pressed="false">Mensual</button>
+        </div>
+        <small style="display:block;margin-top:8px">Los volúmenes se ingresan por mes; en modo anual se multiplican por 12.</small>
+      </div>
+    </div>
+
+    <div class="section rules">
+      <h2 style="margin:0">📌 Mensajes recibidos vs. respuestas: qué se cobra</h2>
+      <div class="rules-grid">
+        <div class="rule"><div class="ri">🙌</div><b class="t">Tus clientes no pagan</b>Que una persona inicie un chat y le escriba a tu empresa sigue siendo <b>gratis</b>. Los mensajes recibidos no consumen créditos.</div>
+        <div class="rule"><div class="ri">💬</div><b class="t">Las respuestas de tu empresa sí se cobran</b>Cuando tu empresa contesta o da seguimiento dentro de las primeras 24 h, cada mensaje de respuesta se cobra (antes Meta permitía que fueran gratis).</div>
+        <div class="rule"><div class="ri">📅</div><b class="t">Fechas de cobro</b>Meta cobra estas respuestas desde el <b>1-oct-2026</b>. Salesforce absorbió el primer mes como periodo de gracia y las cobra a las empresas desde el <b>1-nov-2026</b>.</div>
+        <div class="rule"><div class="ri">🌎</div><b class="t">Cómo se paga</b>El precio depende de la tarifa de cada país. Aplica solo hacia el futuro: no se cobra nada por respuestas enviadas antes de esa fecha.</div>
+      </div>
+      <div class="rule-flow">
+        <span class="node b-fr">👤 Cliente escribe → 0 créditos</span><span class="arr">+</span>
+        <span class="node b-sv">🏢 Empresa responde → multiplicador del país × factor de más mensajes en cada conversación</span>
+      </div>
+      <small class="muted" style="display:block;margin-top:8px">En la tabla de casos de uso, la columna <b>Factor de más mensajes en cada conversación</b> indica cuántos mensajes envía tu empresa en promedio por cada conversación o envío. Solo esos mensajes se facturan.</small>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <h2><span class="step">2</span>Multiplicadores del país seleccionado</h2>
+        <small id="countryNote"></small>
+      </div>
+      <div class="grid g4" id="catCards"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <h2><span class="step">3</span>Casos de uso identificados</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" class="no-print">
+          <button class="btn ghost sm" id="loadDefaults">↺ Cargar casos de ejemplo</button>
+          <button class="btn danger sm" id="clearCases">🗑 Vaciar tabla</button>
+        </div>
+      </div>
+
+      <form class="addrow no-print" id="addForm" autocomplete="off">
+        <div><label class="lbl" for="aName">＋ Nuevo caso de uso</label><input class="in" id="aName" placeholder="Ej. Marketing – Promoción fin de año" required></div>
+        <div><label class="lbl" for="aCat">Tipo de plantilla</label><select class="in" id="aCat"></select></div>
+        <div><label class="lbl" for="aMon">Mensajes / mes</label><input class="in num" id="aMon" placeholder="tbd" inputmode="numeric"></div>
+        <div><label class="lbl" for="aFac" title="Factor de más mensajes en cada conversación">Factor más msjs / conv.</label><input class="in num" id="aFac" value="1" inputmode="decimal"></div>
+        <div><label class="lbl" for="aDesc">Descripción</label><input class="in" id="aDesc" placeholder="¿Qué envía, a quién y cuándo?"></div>
+        <div><button class="btn" type="submit">＋ Agregar</button></div>
+      </form>
+
+      <div class="lib no-print">
+        <div style="display:flex;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;align-items:baseline">
+          <h4 style="margin:0">🧩 Biblioteca de casos de uso</h4>
+          <small class="muted hint-fine">Arrastra un caso a la tabla en la posición que quieras, o haz clic para agregarlo arriba.</small>
+          <small class="muted hint-touch">Toca un caso para agregarlo arriba de la tabla.</small>
+        </div>
+        <div class="lib-filters" id="libFilters" role="group" aria-label="Filtrar por tipo de plantilla"></div>
+        <div class="lib-items" id="libItems"></div>
+      </div>
+
+      <p class="muted" style="margin:16px 0 8px">Edita cualquier campo. Usa <b>⋮⋮</b> para arrastrar y reordenar (o selecciónalo y usa las flechas ↑ ↓). <b>Total facturable = mensajes / mes × factor de más mensajes en cada conversación</b>. Deja <b>Mensajes / mes</b> vacío para marcarlo como <span class="badge b-tbd">tbd</span> (no suma). Todo se recalcula al instante.</p>
+      <div class="caselist" id="caseWrap">
+        <div class="case-head"><span></span><span><b>Caso de uso</b><small>y descripción</small></span><span><b>Tipo de plantilla</b><small>categoría Meta</small></span><span class="n"><b>Mensajes / mes</b><small>volumen base</small></span><span class="n"><b>Factor <span class="tip" tabindex="0" role="button" aria-label="Definición">i<span class="tipbox" role="tooltip">Factor de más mensajes en cada conversación: promedio de mensajes que tu empresa envía al cliente en cada conversación o envío. Lo que escribe el cliente es gratis; cada mensaje de la empresa se cobra. Para una plantilla que se envía una sola vez, usa 1.</span></span></b><small>más mensajes en cada conversación</small></span><span class="n"><b>Total facturable</b><small id="thVol">anual</small></span><span class="n"><b>Multiplicador</b><small>créditos / mensaje</small></span><span class="n"><b>Créditos</b><small>totales</small></span><span class="n"><b>USD</b><small>estimado</small></span><span></span></div>
+        <div id="caseList"></div>
+        <div class="case-total"><div>TOTAL CASOS</div><div><span>Volumen / mes</span><b id="fMon"></b></div><div><span id="fVolL">Facturables (anual)</span><b id="fVol"></b></div><div><span>Créditos</span><b id="fCr"></b></div><div><span>USD</span><b id="fUsd"></b></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><h2><span class="step">4</span>Resultado por tipo de plantilla</h2><small id="resNote"></small></div>
+      <div class="grid g2">
+        <div>
+          <div class="tbl-wrap">
+            <table id="sumTable">
+              <thead><tr><th>Tipo de plantilla</th><th class="n" id="thRate">Rate créditos</th><th class="n">Total de mensajes</th><th class="n">Total de créditos necesarios</th><th class="n">USD</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="card soft" style="margin-top:14px">
+            <h4>Distribución de créditos</h4>
+            <div class="bars" id="bars"></div>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;align-content:start">
+          <div class="kpi"><div class="k">Total créditos</div><div class="v" id="kCr"></div><div class="s">Σ mensajes × multiplicador</div></div>
+          <div class="kpi"><div class="k">Paquetes necesarios</div><div class="v" id="kPk"></div><div class="s">Total créditos ÷ 1,000</div></div>
+          <div class="kpi"><div class="k">Valor del paquete</div><div class="v" id="kPr"></div><div class="s">USD por 1,000 créditos</div></div>
+          <div class="kpi"><div class="k">Paquetes a comprar</div><div class="v" id="kPkUp"></div><div class="s" id="kPkUpS"></div></div>
+          <div class="kpi hl" style="grid-column:1/-1"><div class="k">Total USD</div><div class="v" id="kUsd"></div><div class="s" id="kUsdS"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><h2><span class="step">5</span>Paso a paso del cálculo</h2></div>
+      <div class="formula" id="formula"></div>
+      <div class="callout"><b>Fórmula:</b> mensajes_facturables = mensajes / mes × factor de más mensajes en cada conversación → créditos_categoría = multiplicador_país[categoría] × mensajes_facturables → total_créditos = Σ categorías → paquetes = total_créditos ÷ 1,000 → <b>total USD = paquetes × valor_paquete</b>. Los mensajes <b>inbound</b> (los que el usuario envía a la empresa) nunca consumen créditos.</div>
+    </div>
+
+
+    <div class="warnbox" style="margin:22px 0 0;max-width:none"><span class="wi">⚠️</span><div><b>Esta calculadora es solo una estimación.</b> El consumo real depende de la categoría que Meta asigne a cada plantilla, del país de cada destinatario y de los mensajes efectivamente entregados. El cliente puede llevar el control de su consumo real en el <b>Digital Wallet</b> de su org de Salesforce.</div></div>
+
+    <div class="sticky-total" id="sticky">
+      <div class="it opt"><span>País</span><b id="sCountry"></b></div>
+      <div class="it"><span>Créditos</span><b id="sCr"></b></div>
+      <div class="it opt"><span>Paquetes</span><b id="sPk"></b></div>
+      <div class="it"><span>Total USD</span><b id="sUsd"></b></div>
+      <div class="sp">
+        <span class="pdfstat" id="pdfStat">Preparando PDF…</span>
+        <button class="btn big" id="dlPdf">⬇ <span class="long">Descargar PDF para el cliente</span><span class="short">PDF</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: EJEMPLOS ============ -->
+  <section class="panel" role="tabpanel" id="p-ex" aria-labelledby="t-ex" hidden>
+    <h2>5 ejemplos: cómo se cobra cada mensaje</h2>
+    <p>Los ejemplos se recalculan con el <b>país</b> y el <b>valor del paquete</b> configurados en la pestaña Calculadora (actualmente <b id="exCtx"></b>). Cada burbuja indica si el mensaje consume créditos y cuánto.</p>
+    <div class="callout"><b>Regla de oro:</b> se cobra <u>cada mensaje entregado</u> por la empresa = <b>multiplicador del país × 1 mensaje</b>. Costo USD por mensaje = multiplicador × (valor del paquete ÷ 1,000). Lo que escribe el cliente (inbound) es gratis.</div>
+    <div class="grid" id="examples" style="margin-top:14px"></div>
+  </section>
+
+  <!-- ============ TAB 3: PLANTILLAS ============ -->
+  <section class="panel" role="tabpanel" id="p-tpl" aria-labelledby="t-tpl" hidden>
+    <h2>Categorías de plantilla y recomendaciones</h2>
+    <p>Meta clasifica cada plantilla según su <b>contenido y propósito</b> (no Salesforce). La categoría define el multiplicador que se cobra.</p>
+    <div class="grid g2" id="tplCards"></div>
+
+    <div class="section card" style="border-color:#A9D3F7">
+      <h3>🔔 5 directrices básicas para que una plantilla califique como Utility</h3>
+      <ol class="check">
+        <li><div><b>Eliminar cualquier lenguaje promocional u oferta.</b><br><small>Evitar términos como “promoción”, “descuento”, “compra ahora” u “oferta exclusiva”.</small></div></li>
+        <li><div><b>Enfocarse en información transaccional o de servicio.</b><br><small>Estado del pedido, confirmación de compra, recordatorio de pago, actualizaciones importantes.</small></div></li>
+        <li><div><b>Personalizar el mensaje con datos específicos del cliente.</b><br><small>Número de pedido, fecha de entrega, valor a pagar.</small></div></li>
+        <li><div><b>Incluir botones de llamada a la acción (CTA) que faciliten la resolución o confirmación.</b><br><small>Botones para confirmar cita, acceder a comprobante o hablar con soporte.</small></div></li>
+        <li><div><b>Garantizar que la plantilla responda a una interacción del usuario.</b><br><small>Mensajes enviados en respuesta a una solicitud o acción del cliente, no iniciados con fines promocionales.</small></div></li>
+      </ol>
+      <div class="vs" style="margin-top:12px">
+        <div class="callout warn" style="margin:0"><b>❌ Se clasificaría como Marketing</b><br>“¡Aprovecha! 20% de descuento en tu próximo mantenimiento. Compra ahora.”</div>
+        <div class="callout ok" style="margin:0"><b>✅ Califica como Utility</b><br>“Hola Carlos, tu cita de mantenimiento #4512 es el 14-nov a las 9:00 a.m. en Sucursal Escazú. [Confirmar] [Reprogramar]”</div>
+      </div>
+      <div class="callout" style="margin-top:12px"><b>Recomendación de venta:</b> usar la <b>Template Library</b> de Salesforce (+100 plantillas preaprobadas para +20 casos de uso) para alertas de fraude, OTP, entregas, etc. Ahorra tiempo y viene precategorizada como Utility.</div>
+    </div>
+
+    <div class="section grid g3">
+      <div class="card"><h3>✅ Opt-in</h3><ul class="tight"><li>Envía mensajes solo a usuarios que hayan aceptado recibirlos.</li><li>Comunica claramente el valor de recibir actualizaciones por WhatsApp.</li><li>Sé explícito sobre los tipos de mensajes que el cliente acepta recibir.</li></ul></div>
+      <div class="card"><h3>🚪 Opt-out</h3><ul class="tight"><li>Indica cómo cancelar la recepción de mensajes.</li><li>Atiende pronto las solicitudes de baja para reducir el riesgo de bloqueos o denuncias.</li></ul></div>
+      <div class="card"><h3>⭐ Calidad de plantilla</h3><ul class="tight"><li>Cada plantilla tiene una calificación: Pending, High, Medium, Low.</li><li>Con feedback negativo continuo pasa a <b>Inactiva</b> (pausada) para proteger la calidad del número.</li><li>El mantra: <b>Esperado · Relevante · Oportuno</b>.</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 4: CÓMO FUNCIONA ============ -->
+  <section class="panel" role="tabpanel" id="p-how" aria-labelledby="t-how" hidden>
+    <h2>Cómo funciona el consumo de créditos</h2>
+    <div class="grid g3">
+      <div class="card"><div class="icon-xl">📨</div><h3>Cobro por mensaje</h3><p>La entrega de cada plantilla a un usuario genera un cargo según el multiplicador de su categoría y el código de país del destinatario.</p><div class="callout" style="margin:0">Enviar <b>2 Marketing + 2 Utility</b> al mismo usuario = <b>4 cargos separados</b> (2 de Marketing, 2 de Utility).</div></div>
+      <div class="card"><div class="icon-xl">📥</div><h3>Inbound gratis</h3><p>Los mensajes que el usuario envía a la empresa <b>nunca consumen créditos</b>, en ninguna categoría ni país.</p></div>
+      <div class="card"><div class="icon-xl">🏷️</div><h3>Meta decide la categoría</h3><p>Meta determina las categorías según el contenido y el propósito del mensaje, no Salesforce.</p></div>
+    </div>
+
+    <div class="section card">
+      <h3>⏱️ Customer Service Window (ventana de servicio de 24 h)</h3>
+      <p>Se abre cuando el usuario escribe primero a la empresa. Dentro de esas 24 h la empresa puede enviar cualquier tipo de mensaje.</p>
+      <div class="timeline">
+        <div class="tl"><div class="t">Hora 0</div><b>El cliente escribe</b><br><small>Inbound · 0 créditos. Inicia la ventana de 24 h.</small></div>
+        <div class="tl"><div class="t">Dentro de 24 h</div><b>Respuestas free-form (Service)</b><br><small><b>Se facturan</b> con el multiplicador Service.</small></div>
+        <div class="tl"><div class="t">Dentro de 24 h</div><b>Plantillas Utility</b><br><small><b>También se facturan</b> con el multiplicador Utility.</small></div>
+        <div class="tl"><div class="t">Siempre</div><b>Marketing y Authentication</b><br><small>Se cobran según el multiplicador, dentro o fuera de la ventana.</small></div>
+      </div>
+      <div class="callout warn"><b>Importante:</b> Utility (plantilla) y Service (free-form) enviados dentro de la Customer Service Window ahora se facturan. Esto impacta directamente casos como “Recepción de mensajes” y notificaciones posteriores a la compra. Meta cobra estas respuestas desde el 1-oct-2026; Salesforce absorbió el primer mes y las factura desde el 1-nov-2026. No se cobra nada por respuestas enviadas antes de esa fecha.</div>
+    </div>
+
+    <div class="section card">
+      <h3>🎁 Free Entry Point / Referral</h3>
+      <div class="flow" style="margin:8px 0 12px">
+        <span class="node b-mk">Anuncio Click-to-WhatsApp o CTA de página de Facebook</span><span class="arr">→</span>
+        <span class="node b-fr">El usuario escribe (gratis)</span><span class="arr">→</span>
+        <span class="node b-ut">La empresa responde dentro de 24 h</span><span class="arr">→</span>
+        <span class="node b-sv">Ventana Free Entry Point (hasta 7 días)</span>
+      </div>
+      <ul class="tight">
+        <li>Dentro de la ventana se puede enviar <b>cualquier plantilla sin cargo adicional</b>.</li>
+        <li>Los mensajes free-form se pueden enviar mientras la ventana de servicio de 24 h esté abierta (24 h desde el último mensaje del usuario).</li>
+        <li>El anuncio Click-to-WhatsApp tiene costo estándar de Ads: el mensaje que inicia desde el anuncio es gratis, pero no el anuncio en sí.</li>
+      </ul>
+    </div>
+
+    <div class="section grid g2">
+      <div class="card"><h3>🧪 Sandbox</h3><p>El uso de WhatsApp en sandbox consume créditos con los mismos multiplicadores que producción, y se muestra en el Digital Wallet de la org productiva.</p></div>
+      <div class="card"><h3>⚠️ Sujeto a cambios</h3><p>Multiplicadores, países, números de teléfono y tipos de uso pueden cambiar en cualquier momento. Consulta el Rate Card vigente o a tu representante de Salesforce.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 5: REFERENCIA ============ -->
+  <section class="panel" role="tabpanel" id="p-ref" aria-labelledby="t-ref" hidden>
+    <h2>Referencia de SKUs</h2>
+    <p>Las dos referencias de SKU se pueden utilizar para comprar créditos de WhatsApp. Esta calculadora usa <b>Salesforce Message Credits – WhatsApp</b> como SKU unificado.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Producto</th><th>SKU</th><th>Se puede utilizar en</th><th>“Pasillo” de compra</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-sku-mk">MARKETING</span><br><b>Salesforce Message Credits – WhatsApp for Marketing (1,000)</b></td><td><b>200008691</b></td><td>Marketing Cloud (Journey Builder, Meta Direct, broadcasts) <b>y también</b> Service Cloud / Agentforce Contact Center Digital</td><td>Línea de Marketing · sellers Digital / Marketing</td></tr>
+          <tr><td><span class="badge b-sku-sv">SERVICE</span><br><b>Salesforce Message Credits – WhatsApp (1,000)</b></td><td><b>200008690</b></td><td>Service Cloud / Agentforce Contact Center Digital <b>y también</b> Marketing Cloud</td><td>Línea Core · sellers Core</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section card" style="border-color:#A9DBA0">
+      <h3>¿Qué diferencia hay entre los dos SKUs?</h3>
+      <p style="font-size:1.05rem"><b>Técnicamente, ninguna.</b> Son el mismo producto, solo cambia el “pasillo” por el que lo compras. Mismos créditos y mismo rate card.</p>
+      <div class="grid g2">
+        <div class="callout ok" style="margin:0"><b>Si compro los créditos “para Marketing”, ¿los puedo usar en atención al cliente?</b><br><br>¡Sí! Los créditos de WhatsApp funcionan como una sola bolsa o saldo unificado. Si los compraste para Marketing, puedes gastarlos enviando mensajes desde el área de Servicio (Service Cloud), y viceversa. No importa cómo se llame el contrato, los créditos se comparten.</div>
+        <div class="callout" style="margin:0"><b>¿Qué necesito para que funcione la bandeja de mensajes unificada (UCP)?</b><br><br>Cualquiera de los dos paquetes de créditos te sirve, pero hay un requisito obligatorio en tu sistema. Debes tener activos:
+          <ol style="margin:.5em 0;padding-left:1.3em"><li><b>Data Cloud:</b> para manejar los datos.</li><li><b>Digital Engagement / UCP:</b> para manejar las interacciones.</li></ol>
+          <small>Sin Data Cloud, la bandeja unificada no funcionará.</small></div>
+      </div>
+      <div class="callout ok" style="margin:14px 0 0;font-size:1rem"><b>✅ Conclusión:</b> Para centralizar tus mensajes (Unified Conversations), no necesitas comprar ambas versiones. Con una sola es suficiente.</div>
+    </div>
+    <div class="section">
+      <div class="section-title"><h2>Rate Card completo – multiplicadores por país (1-nov-2026)</h2><input class="in ref-search" id="refSearch" placeholder="Filtrar país o ISO…"></div>
+      <p class="muted" style="margin-top:0">Haz clic en una fila para usar ese país en la calculadora. <span id="refCount"></span></p>
+      <div class="tbl-wrap" style="max-height:520px"><table id="refTable"><thead><tr><th>ISO</th><th>Mercado</th><th class="n">Marketing</th><th class="n">Utility</th><th class="n">Authentication</th><th class="n">Service</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="warnbox"><span class="wi">⚠️</span><div><b>Esta calculadora es solo una estimación.</b> El consumo real depende de la categoría que Meta asigne a cada plantilla, del país de cada destinatario y de los mensajes efectivamente entregados. El cliente puede llevar el control de su consumo real en el <b>Digital Wallet</b> de su org de Salesforce.</div></div>
+  <div class="note">Multiplicadores, países y tipos de uso sujetos a cambio sin previo aviso. Fuente: Salesforce Message Credits – WhatsApp Rate Card (vigente desde el 1 de noviembre de 2026).</div>
+  <a class="official" href="https://www.salesforce.com/marketing/salesforce-message-credits/" target="_blank" rel="noopener noreferrer">🔗 Ir a la página oficial de Salesforce Message Credits</a>
+</footer>
+
+<script>
+/* ===================== DATASET (143 filas: 142 países + Other) ===================== */
+const RATES = [{"iso":"AF","market":"Afghanistan","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"AL","market":"Albania","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"DZ","market":"Algeria","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"AO","market":"Angola","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"AR","market":"Argentina","marketing":76.3,"utility":32.1,"authentication":32.1,"service":32.1},{"iso":"AM","market":"Armenia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"AU","market":"Australia","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"AT","market":"Austria","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"AZ","market":"Azerbaijan","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"BH","market":"Bahrain","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"BD","market":"Bangladesh","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"BY","market":"Belarus","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"BE","market":"Belgium","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"BJ","market":"Benin","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"BO","market":"Bolivia","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"BW","market":"Botswana","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"BR","market":"Brazil","marketing":73.86,"utility":8.04,"authentication":8.04,"service":8.04},{"iso":"BG","market":"Bulgaria","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"BF","market":"Burkina Faso","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"BI","market":"Burundi","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"KH","market":"Cambodia","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"CM","market":"Cameroon","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"CA","market":"Canada","marketing":30.87,"utility":4.2,"authentication":4.2,"service":4.2},{"iso":"TD","market":"Chad","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"CL","market":"Chile","marketing":109.76,"utility":24.7,"authentication":24.7,"service":24.7},{"iso":"CN","market":"China","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"CO","market":"Colombia","marketing":15.44,"utility":0.99,"authentication":0.99,"service":0.99},{"iso":"CG","market":"Congo","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"CD","market":"Congo, Democratic Republic of","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"CR","market":"Costa Rica","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"HR","market":"Croatia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"CZ","market":"Czech Republic","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"DK","market":"Denmark","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"DO","market":"Dominican Republic","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"EC","market":"Ecuador","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"EG","market":"Egypt","marketing":79.51,"utility":4.45,"authentication":4.45,"service":4.45},{"iso":"SV","market":"El Salvador","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"ER","market":"Eritrea","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"SZ","market":"Eswatini","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"ET","market":"Ethiopia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"FI","market":"Finland","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"FR","market":"France","marketing":106.05,"utility":37.04,"authentication":37.04,"service":37.04},{"iso":"GA","market":"Gabon","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"GM","market":"Gambia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"GE","market":"Georgia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"DE","market":"Germany","marketing":168.52,"utility":67.91,"authentication":67.91,"service":67.91},{"iso":"GH","market":"Ghana","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"GR","market":"Greece","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"GT","market":"Guatemala","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"GW","market":"Guinea-Bissau","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"HT","market":"Haiti","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"HN","market":"Honduras","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"HK","market":"Hong Kong","marketing":90.38,"utility":13.96,"authentication":13.96,"service":32.1},{"iso":"HU","market":"Hungary","marketing":106.18,"utility":26.18,"authentication":26.18,"service":43.21},{"iso":"IN","market":"India","marketing":14.57,"utility":1.94,"authentication":1.94,"service":1.73},{"iso":"ID","market":"Indonesia","marketing":50.75,"utility":30.87,"authentication":30.87,"service":30.87},{"iso":"IQ","market":"Iraq","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"IE","market":"Ireland","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"IL","market":"Israel","marketing":43.59,"utility":6.55,"authentication":6.55,"service":6.55},{"iso":"IT","market":"Italy","marketing":98.15,"utility":37.04,"authentication":37.04,"service":37.04},{"iso":"CI","market":"Ivory Coast","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"JM","market":"Jamaica","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"JP","market":"Japan","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"JO","market":"Jordan","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"KZ","market":"Kazakhstan","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"KE","market":"Kenya","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"KW","market":"Kuwait","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"LA","market":"Laos","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"LV","market":"Latvia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"LB","market":"Lebanon","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"LS","market":"Lesotho","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"LR","market":"Liberia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"LY","market":"Libya","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"LT","market":"Lithuania","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"MO","market":"Macau","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"MK","market":"Macedonia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"MG","market":"Madagascar","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"MW","market":"Malawi","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"MY","market":"Malaysia","marketing":106.18,"utility":17.29,"authentication":17.29,"service":17.29},{"iso":"ML","market":"Mali","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"MR","market":"Mauritania","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"MX","market":"Mexico","marketing":49.02,"utility":10.5,"authentication":10.5,"service":10.5},{"iso":"MD","market":"Moldova","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"MN","market":"Mongolia","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"MA","market":"Morocco","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"MZ","market":"Mozambique","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"NA","market":"Namibia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"NP","market":"Nepal","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"NL","market":"Netherlands","marketing":197.17,"utility":61.73,"authentication":61.73,"service":61.73},{"iso":"NG","market":"Nigeria","marketing":63.71,"utility":8.28,"authentication":8.28,"service":8.28},{"iso":"NZ","market":"New Zealand","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"NI","market":"Nicaragua","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"NE","market":"Niger","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"NO","market":"Norway","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"OM","market":"Oman","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"PK","market":"Pakistan","marketing":58.4,"utility":12.35,"authentication":12.35,"service":18.52},{"iso":"PA","market":"Panama","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"PG","market":"Papua New Guinea","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"PY","market":"Paraguay","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"PE","market":"Peru","marketing":86.8,"utility":24.7,"authentication":24.7,"service":37.04},{"iso":"PH","market":"Philippines","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"PL","market":"Poland","marketing":45.19,"utility":26.18,"authentication":26.18,"service":15.07},{"iso":"PT","market":"Portugal","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"PR","market":"Puerto Rico","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"QA","market":"Qatar","marketing":42.1,"utility":11.24,"authentication":11.24,"service":14.82},{"iso":"RO","market":"Romania","marketing":106.18,"utility":26.18,"authentication":26.18,"service":35.81},{"iso":"RU","market":"Russia","marketing":99.02,"utility":49.39,"authentication":49.39,"service":49.39},{"iso":"RW","market":"Rwanda","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"SA","market":"Saudi Arabia","marketing":71.12,"utility":13.21,"authentication":13.21,"service":13.21},{"iso":"SN","market":"Senegal","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"RS","market":"Serbia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"SL","market":"Sierra Leone","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"SG","market":"Singapore","marketing":90.38,"utility":13.96,"authentication":13.96,"service":19.76},{"iso":"SK","market":"Slovakia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"SI","market":"Slovenia","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"SO","market":"Somalia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"ZA","market":"South Africa","marketing":46.8,"utility":9.39,"authentication":9.39,"service":11.73},{"iso":"SS","market":"South Sudan","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"ES","market":"Spain","marketing":87.29,"utility":24.7,"authentication":24.7,"service":24.7},{"iso":"LK","market":"Sri Lanka","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"SD","market":"Sudan","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"SE","market":"Sweden","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"CH","market":"Switzerland","marketing":73.09,"utility":21.12,"authentication":21.12,"service":21.12},{"iso":"TW","market":"Taiwan","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"TJ","market":"Tajikistan","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"TZ","market":"Tanzania","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"TH","market":"Thailand","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"TG","market":"Togo","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"TN","market":"Tunisia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"TR","market":"Turkey","marketing":13.46,"utility":1.12,"authentication":1.12,"service":1.12},{"iso":"TM","market":"Turkmenistan","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"UG","market":"Uganda","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"UA","market":"Ukraine","marketing":106.18,"utility":26.18,"authentication":26.18,"service":26.18},{"iso":"AE","market":"United Arab Emirates","marketing":71.12,"utility":19.39,"authentication":19.39,"service":19.39},{"iso":"GB","market":"United Kingdom","marketing":78.4,"utility":27.17,"authentication":27.17,"service":27.17},{"iso":"US","market":"United States","marketing":30.87,"utility":4.2,"authentication":4.2,"service":4.2},{"iso":"UY","market":"Uruguay","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"UZ","market":"Uzbekistan","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"VE","market":"Venezuela","marketing":91.36,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"VN","market":"Vietnam","marketing":103.96,"utility":13.96,"authentication":13.96,"service":13.96},{"iso":"YE","market":"Yemen","marketing":48.4,"utility":11.24,"authentication":11.24,"service":11.24},{"iso":"ZM","market":"Zambia","marketing":27.78,"utility":4.94,"authentication":4.94,"service":4.94},{"iso":"OT","market":"Other","marketing":74.57,"utility":9.51,"authentication":9.51,"service":9.51}];
+
+/* ===================== CATEGORÍAS ===================== */
+const CATS = {
+  marketing:{label:'Marketing',icon:'📣',cls:'mk',color:'#DD7A01',rgb:[221,122,1],
+    def:'Incluye promociones u ofertas, actualizaciones informativas o invitaciones a que el cliente responda o actúe. Cualquier mensaje que no califique como Utility o Authentication es Marketing. Requiere opt-in explícito del cliente.'},
+  service:{label:'Servicio',icon:'💬',cls:'sv',color:'#2E844A',rgb:[46,132,74],
+    def:'Ayuda a resolver consultas de usuarios. Son mensajes de formato libre (free-form) que se pueden enviar dentro de la ventana de servicio al cliente de 24 horas. Pueden ser iniciados por la empresa o por el cliente.'},
+  utility:{label:'Utility',icon:'🔔',cls:'ut',color:'#0176D3',rgb:[1,118,211],
+    def:'Facilita una solicitud o transacción específica y acordada, o una actualización sobre una transacción en curso (notificaciones posteriores a la compra, estados de cuenta recurrentes).'},
+  authentication:{label:'Authentication',icon:'🔐',cls:'au',color:'#7526E3',rgb:[117,38,227],
+    def:'Permite autenticar usuarios con contraseñas de un solo uso (OTP), potencialmente en varios pasos del login: verificación de cuenta, recuperación de cuenta, desafíos de integridad.'},
+  free:{label:'Sin cargo (Inbound / Free Entry Point)',icon:'🎁',cls:'fr',color:'#747474',rgb:[116,116,116],
+    def:'Mensajes entrantes del usuario o plantillas enviadas dentro de una ventana Free Entry Point (Click-to-WhatsApp). No consumen créditos.'}
+};
+const ORDER = ['marketing','service','utility','authentication','free'];
+const BILLABLE = ['marketing','service','utility','authentication'];
+
+/* ===================== CASOS DE USO (foto) ===================== */
+const DEFAULT_CASES = [
+  {name:'Envíos promocionales de repuestos',cat:'marketing',monthly:10000,desc:'Campañas de Marketing enviadas por WhatsApp a la base de clientes con ofertas de autopartes, lanzamientos de nuevas líneas o descuentos por categoría (frenos, filtros, aceites, etc.), personalizadas por tipo de vehículo del cliente.'},
+  {name:'Envíos promocionales de servicio de taller',cat:'marketing',monthly:1000,desc:'Campañas de Marketing para promocionar paquetes de mantenimiento, promociones de mano de obra o servicios adicionales del taller (alineación, balanceo, diagnóstico).'},
+  {name:'Cobranza',cat:'utility',monthly:1500,desc:'Plantillas de tipo Utility para recordar a clientes (B2B/talleres/distribuidores) saldos pendientes, fechas de vencimiento y opciones de pago, evitando morosidad.'},
+  {name:'Recordatorios de servicios de taller',cat:'utility',monthly:5000,desc:'Notificaciones automáticas de próximo mantenimiento, vencimiento de garantía o cita de servicio programada, basadas en kilometraje o fecha estimada.'},
+  {name:'Recepción de mensajes (Cliente -> Empresa)',cat:'service',monthly:50000,desc:'Canal de entrada conversacional donde el cliente inicia contacto para consultas de repuestos, cotizaciones, soporte de servicio o seguimiento de pedidos; es el volumen más alto. Lo que escribe el cliente es gratis; se facturan las respuestas free-form (Service) de la empresa. Ajusta el “Factor de más mensajes en cada conversación” al promedio de mensajes que envía la empresa en cada conversación.'},
+  {name:'Notificaciones de última milla',cat:'utility',monthly:10000,desc:'Actualizaciones de estado de despacho y entrega de pedidos de repuestos (en preparación, en camino, entregado), con datos del transportista y tiempo estimado. Se facturan aunque la ventana de 24 h esté abierta.'},
+  {name:'Encuestas',cat:'utility',monthly:1000,desc:'Medición de satisfacción después de la compra o del servicio (NPS/CSAT) enviada automáticamente tras la entrega del repuesto o el cierre de la orden de taller.'},
+  {name:'Club de lealtad (puntos)',cat:'utility',monthly:null,desc:'Programa de lealtad que informa acumulación y redención de puntos, beneficios disponibles y vencimientos. Ojo: si el mensaje incluye incentivo de recompra, Meta lo clasificará como Marketing (Utility / Marketing).'},
+  {name:'Talento humano',cat:'utility',monthly:null,desc:'Comunicación con candidatos o colaboradores: convocatorias de vacantes, confirmaciones de entrevistas, avisos internos de RRHH.'},
+  {name:'Carrito abandonado en e-commerce',cat:'marketing',monthly:null,desc:'Recordatorio automático a clientes que dejaron productos en el carrito de la tienda en línea de repuestos, incentivando a completar la compra.'},
+  {name:'Preaprobado: aumento de cupo de crédito',cat:'marketing',monthly:null,desc:'Categoría sugerida: Marketing (oferta de crédito preaprobado / aumento de cupo). Por definir con el cliente.'},
+  {name:'Autenticación en apps (envío de código OTP)',cat:'authentication',monthly:null,desc:'Categoría sugerida: Authentication. Código de un solo uso para login, registro o recuperación de cuenta en apps.'}
+];
+const LIBRARY = DEFAULT_CASES.concat([
+  {name:'Confirmación de cita de taller',cat:'utility',monthly:null,desc:'Confirmación de la cita agendada (fecha, hora, sucursal y servicio) con botones para agregar al calendario o reprogramar.'},
+  {name:'Vehículo listo para retiro',cat:'utility',monthly:null,desc:'Aviso de que la orden de taller terminó, con monto a pagar y enlace a la factura.'},
+  {name:'Confirmación de compra / factura',cat:'utility',monthly:null,desc:'Comprobante de compra con número de pedido, monto y enlace a la factura.'},
+  {name:'Carrusel de productos',cat:'marketing',monthly:null,desc:'Catálogo interactivo con varias tarjetas (imagen, descripción y botón de compra) en un solo mensaje.'},
+  {name:'Cupón por tiempo limitado',cat:'marketing',monthly:null,desc:'Oferta con código de cupón, botón de copiar y temporizador de vencimiento.'},
+  {name:'Verificación en entrega (OTP)',cat:'authentication',monthly:null,desc:'Código de un solo uso para validar que el pedido se entrega al cliente correcto.'},
+  {name:'Recuperación de cuenta (OTP)',cat:'authentication',monthly:null,desc:'Código de un solo uso para restablecer el acceso a la cuenta de forma segura.'},
+  {name:'Atención posventa',cat:'service',monthly:null,desc:'Respuestas free-form a dudas de garantía, devoluciones o instalación después de la compra.'},
+  {name:'Cotizaciones con asesor / Agentforce',cat:'service',monthly:null,desc:'Conversación de venta asistida para cotizar repuestos o servicios dentro de la ventana de 24 h.'},
+  {name:'Conversaciones desde anuncio Click-to-WhatsApp',cat:'free',monthly:null,desc:'Mensajes dentro de la ventana Free Entry Point (anuncio Click-to-WhatsApp): sin cargo. El anuncio se paga aparte en Meta Ads.'}
+]);
+
+/* ===================== UTILIDADES ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const f0 = n => (Math.round(n)||0).toLocaleString('en-US');
+const fC = n => (Math.round(n*100)/100).toLocaleString('en-US',{maximumFractionDigits:2});
+const f2 = n => (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fF = n => (Math.round((n||0)*100)/100).toLocaleString('en-US',{maximumFractionDigits:2});
+const f4 = n => (n||0).toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
+const usd = n => '$' + f2(n);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const parseIntSafe = s => { const d=String(s??'').replace(/[^\d]/g,''); return d===''?null:Math.max(0,parseInt(d,10)); };
+const flagOf = iso => iso==='OT' ? '🌐' : String.fromCodePoint(...[...iso].map(c=>0x1F1E6+c.charCodeAt(0)-65));
+let uid = 1;
+
+const DN = (()=>{ try{ return new Intl.DisplayNames(['es'],{type:'region'}); }catch(e){ return null; } })();
+RATES.forEach(r=>{
+  let es = r.market;
+  if (r.iso==='OT') es = 'Otros países (Other)';
+  else if (DN) { try{ es = DN.of(r.iso) || r.market; }catch(e){} }
+  r.es = es; r.flag = flagOf(r.iso); r.key = norm(es+' '+r.market+' '+r.iso);
+});
+RATES.sort((a,b)=> a.iso==='OT'?1 : b.iso==='OT'?-1 : a.es.localeCompare(b.es,'es'));
+const byIso = Object.fromEntries(RATES.map(r=>[r.iso,r]));
+
+/* ===================== ESTADO ===================== */
+const state = {
+  client:'', iso:'CR', price:0.90, period:'annual',
+  extra:{marketing:0,service:0,utility:0,authentication:0},
+  cases: DEFAULT_CASES.map(c=>({...c,id:uid++}))
+};
+const country = () => byIso[state.iso] || byIso.OT;
+const rateOf = (r,c) => c==='free' ? 0 : r[c];
+const periodMult = () => state.period==='annual' ? 12 : 1;
+const periodTxt = () => state.period==='annual' ? 'anual' : 'mensual';
+
+function calc(iso){
+  const r = iso ? byIso[iso] : country(); const m = periodMult();
+  const cats = {}; ORDER.forEach(c=>cats[c]={msgs:0,rate:rateOf(r,c),credits:0});
+  let monTotal = 0;
+  const rows = state.cases.map(cs=>{
+    const fac = (cs.factor ?? 1), vol = (cs.monthly||0)*fac*m, rate = rateOf(r,cs.cat), credits = vol*rate;
+    cats[cs.cat].msgs += vol; monTotal += (cs.monthly||0);
+    return {...cs, vol, rate, credits, usd: credits/1000*state.price};
+  });
+  BILLABLE.forEach(c=>{ cats[c].msgs += (state.extra[c]||0)*m; monTotal += (state.extra[c]||0); });
+  let total = 0, msgs = 0;
+  ORDER.forEach(c=>{ cats[c].credits = cats[c].msgs*cats[c].rate; total += cats[c].credits; msgs += cats[c].msgs; });
+  total = Math.round(total*1e6)/1e6;
+  const packs = total/1000;
+  const usdTotal = packs*state.price;
+  const packsUp = Math.ceil(Math.round(packs*1e6)/1e6);
+  return {r, rows, cats, total, msgs, monTotal, packs, usd:usdTotal, packsUp, usdUp:packsUp*state.price};
+}
+
+/* ===================== TOOLTIP ===================== */
+const tip = txt => `<span class="tip" tabindex="0" role="button" aria-label="Definición">i<span class="tipbox" role="tooltip">${esc(txt)}</span></span>`;
+document.addEventListener('click', e=>{
+  const t = e.target.closest('.tip');
+  $$('.tip.open').forEach(x=>{ if(x!==t) x.classList.remove('open'); });
+  if (t) t.classList.toggle('open');
+});
+
+/* ===================== COMBOBOX PAÍS ===================== */
+const comboBtn=$('#comboBtn'), comboPop=$('#comboPop'), comboSearch=$('#comboSearch'), comboList=$('#comboList');
+let comboItems=[], comboIdx=0;
+function renderComboBtn(){ const r=country(); comboBtn.innerHTML=`<span class="flag">${r.flag}</span><span><b>${esc(r.es)}</b> <small class="muted">· ${r.iso==='OT'?'—':r.iso}</small></span><span class="caret">▾</span>`; }
+function renderComboList(){
+  const q = norm(comboSearch.value.trim());
+  comboItems = RATES.filter(r=>!q || r.key.includes(q));
+  comboIdx = Math.max(0, comboItems.findIndex(r=>r.iso===state.iso));
+  if (q) comboIdx = 0;
+  comboList.innerHTML = comboItems.map((r,i)=>`<li role="option" data-iso="${r.iso}" aria-selected="${i===comboIdx}" class="${r.iso===state.iso?'cur':''}"><span>${r.flag}</span><span>${esc(r.es)}</span><span class="iso">${r.iso==='OT'?'—':r.iso}</span></li>`).join('') || '<li>Sin resultados</li>';
+  const sel = comboList.querySelector('[aria-selected="true"]'); if(sel) sel.scrollIntoView({block:'nearest'});
+}
+function openCombo(){ comboPop.hidden=false; comboBtn.setAttribute('aria-expanded','true'); comboSearch.value=''; renderComboList(); setTimeout(()=>comboSearch.focus(),0); }
+function closeCombo(){ comboPop.hidden=true; comboBtn.setAttribute('aria-expanded','false'); }
+comboBtn.addEventListener('click', ()=> comboPop.hidden ? openCombo() : closeCombo());
+comboSearch.addEventListener('input', renderComboList);
+comboSearch.addEventListener('keydown', e=>{
+  if (e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); comboIdx=Math.min(comboItems.length-1,Math.max(0,comboIdx+(e.key==='ArrowDown'?1:-1))); $$('#comboList li').forEach((li,i)=>li.setAttribute('aria-selected',i===comboIdx)); const s=comboList.children[comboIdx]; s&&s.scrollIntoView({block:'nearest'}); }
+  else if (e.key==='Enter'){ e.preventDefault(); if(comboItems[comboIdx]) setCountry(comboItems[comboIdx].iso); closeCombo(); comboBtn.focus(); }
+  else if (e.key==='Escape'){ closeCombo(); comboBtn.focus(); }
+});
+comboList.addEventListener('click', e=>{ const li=e.target.closest('li[data-iso]'); if(li){ setCountry(li.dataset.iso); closeCombo(); } });
+document.addEventListener('click', e=>{ if(!e.target.closest('#combo')) closeCombo(); });
+function setCountry(iso){ state.iso = iso; renderComboBtn(); renderAll(); }
+
+/* ===================== RENDER: TARJETAS CATEGORÍA ===================== */
+function renderCatCards(){
+  const r = country();
+  $('#catCards').innerHTML = BILLABLE.map(c=>{
+    const k=CATS[c], mult=r[c];
+    return `<div class="catcard" style="--c:${k.color}">
+      <div class="head">${k.icon} ${k.label} ${tip(k.def)}</div>
+      <div class="mult">${f2(mult)} <small>créditos / mensaje</small></div>
+      <div class="per">≈ <b>${'$'+f4(mult*state.price/1000)}</b> USD por mensaje entregado</div>
+      <label class="lbl" for="ex-${c}" style="font-size:.7rem">Volumen adicional / mes (sin caso de uso)</label>
+      <input class="in num extra" id="ex-${c}" data-cat="${c}" inputmode="numeric" value="${state.extra[c]?f0(state.extra[c]):''}" placeholder="0">
+    </div>`;
+  }).join('');
+  $('#countryNote').innerHTML = `${r.flag} ${esc(r.es)} (${esc(r.market)}) · Rate Card 1-nov-2026`;
+}
+$('#catCards').addEventListener('input', e=>{
+  const el=e.target.closest('.extra'); if(!el) return;
+  const v=parseIntSafe(el.value)||0; state.extra[el.dataset.cat]=v; liveFormat(el);
+  updateComputed();
+});
+
+/* ===================== BIBLIOTECA + CASOS (drag & drop) ===================== */
+const caseList = $('#caseList');
+let libFilter = 'all';
+const catOptions = sel => ORDER.map(c=>`<option value="${c}" ${c===sel?'selected':''}>${CATS[c].icon} ${CATS[c].label}</option>`).join('');
+function renderLibrary(){
+  const counts = {all:LIBRARY.length}; LIBRARY.forEach(x=>counts[x.cat]=(counts[x.cat]||0)+1);
+  $('#libFilters').innerHTML = ['all',...ORDER].map(c=>`<button type="button" data-f="${c}" aria-pressed="${libFilter===c}">${c==='all'?'Todos':CATS[c].icon+' '+(c==='free'?'Sin cargo':CATS[c].label)} (${counts[c]||0})</button>`).join('');
+  $('#libItems').innerHTML = LIBRARY.map((x,i)=>({x,i})).filter(o=>libFilter==='all'||o.x.cat===libFilter).map(({x,i})=>
+    `<button type="button" class="pal-item" data-key="${i}" style="--c:${CATS[x.cat].color}" title="${esc(x.desc)}"><span class="grip" aria-hidden="true">⋮⋮</span>${CATS[x.cat].icon} ${esc(x.name)}<span class="plus" aria-hidden="true">＋</span></button>`).join('');
+}
+$('#libFilters').addEventListener('click', e=>{ const b=e.target.closest('button[data-f]'); if(!b) return; libFilter=b.dataset.f; renderLibrary(); });
+
+function grow(t){ if(!t || !t.offsetParent) return; t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; }
+function growAll(){ $$('#caseList textarea').forEach(grow); }
+
+function renderCases(){
+  if (!state.cases.length){ caseList.innerHTML = '<div class="case-empty">No hay casos de uso. Agrega uno arriba o arrastra uno desde la biblioteca.</div>'; return; }
+  const volLbl = state.period==='annual' ? 'Total facturable anual' : 'Total facturable mensual';
+  caseList.innerHTML = state.cases.map(cs=>`
+    <div class="case-row" data-id="${cs.id}" style="--c:${CATS[cs.cat].color}">
+      <div class="h"><button type="button" class="handle" aria-label="Reordenar: arrastra o usa las flechas arriba/abajo" title="Arrastrar para reordenar">⋮⋮</button></div>
+      <div class="c"><div class="cap">Caso de uso</div>
+        <textarea class="in f-name" rows="1" aria-label="Nombre del caso de uso">${esc(cs.name)}</textarea>
+        <textarea class="in f-desc" rows="2" placeholder="Descripción del caso de uso" aria-label="Descripción">${esc(cs.desc)}</textarea></div>
+      <div class="t"><div class="cap">Tipo de plantilla</div><select class="in f-cat" aria-label="Tipo de plantilla">${catOptions(cs.cat)}</select></div>
+      <div class="m"><div class="cap">Mensajes / mes</div><input class="in num f-mon" inputmode="numeric" value="${cs.monthly==null?'':f0(cs.monthly)}" placeholder="tbd" aria-label="Mensajes por mes"></div>
+      <div class="f"><div class="cap">Factor de más mensajes en cada conversación</div><input class="in num f-fac" inputmode="decimal" value="${fF(cs.factor ?? 1)}" aria-label="Factor de más mensajes en cada conversación" title="Promedio de mensajes que la empresa envía por conversación"></div>
+      <div class="v"><div class="cap cap-vol">${volLbl}</div><div class="val c-vol"></div></div>
+      <div class="r"><div class="cap">Multiplicador</div><div class="val c-rate"></div></div>
+      <div class="cr"><div class="cap">Créditos</div><div class="val c-cr"></div></div>
+      <div class="u"><div class="cap">USD</div><div class="val c-usd"></div></div>
+      <div class="d"><button type="button" class="btn danger sm f-del" title="Eliminar caso" aria-label="Eliminar caso">✕</button></div>
+    </div>`).join('');
+  requestAnimationFrame(growAll);
+}
+function liveFormat(el){
+  const v = parseIntSafe(el.value);
+  const fromEnd = el.value.length - (el.selectionStart ?? el.value.length);
+  el.value = v==null ? '' : f0(v);
+  const pos = Math.max(0, el.value.length - fromEnd);
+  try{ el.setSelectionRange(pos,pos); }catch(e){}
+}
+function parseFactor(el){
+  const clean = el.value.replace(/,/g,'.').replace(/[^\d.]/g,'').replace(/(\..*)\./g,'$1');
+  if (clean!==el.value) el.value=clean;
+  const v=parseFloat(clean); return isNaN(v) ? 0 : Math.max(0,v);
+}
+function flashRow(id){
+  const row = caseList.querySelector(`.case-row[data-id="${id}"]`); if(!row) return;
+  row.scrollIntoView({behavior:'smooth',block:'center'});
+  row.animate([{backgroundColor:'#FFF3C4'},{backgroundColor:'#FFFFFF'}],{duration:1500});
+}
+function addCase(item, index){
+  const id = uid++;
+  const i = index==null ? 0 : Math.max(0, Math.min(index, state.cases.length));
+  state.cases.splice(i, 0, {id, name:item.name, cat:item.cat, monthly:item.monthly ?? null, factor:item.factor ?? 1, desc:item.desc || ''});
+  renderCases(); updateComputed(); flashRow(id);
+}
+caseList.addEventListener('input', e=>{
+  const row=e.target.closest('.case-row'); if(!row) return;
+  const cs=state.cases.find(c=>c.id==row.dataset.id); if(!cs) return;
+  const t=e.target;
+  if (t.classList.contains('f-name')){ cs.name=t.value.replace(/\n/g,' '); grow(t); }
+  if (t.classList.contains('f-desc')){ cs.desc=t.value; grow(t); }
+  if (t.classList.contains('f-mon')){ cs.monthly=parseIntSafe(t.value); liveFormat(t); }
+  if (t.classList.contains('f-fac')){ cs.factor=parseFactor(t); }
+  updateComputed();
+});
+caseList.addEventListener('keydown', e=>{
+  if (e.target.classList.contains('f-name') && e.key==='Enter'){ e.preventDefault(); e.target.blur(); return; }
+  const h=e.target.closest('.handle'); if(!h || (e.key!=='ArrowUp' && e.key!=='ArrowDown')) return;
+  e.preventDefault();
+  const id=+h.closest('.case-row').dataset.id, i=state.cases.findIndex(c=>c.id===id), j=i+(e.key==='ArrowUp'?-1:1);
+  if (j<0 || j>=state.cases.length) return;
+  const [m]=state.cases.splice(i,1); state.cases.splice(j,0,m); renderCases(); updateComputed();
+  caseList.querySelector(`.case-row[data-id="${id}"] .handle`).focus();
+});
+caseList.addEventListener('change', e=>{
+  if (e.target.classList.contains('f-fac')){ const cs=state.cases.find(c=>c.id==e.target.closest('.case-row').dataset.id); if(e.target.value.trim()===''){ cs.factor=1; } e.target.value=fF(cs.factor ?? 1); updateComputed(); return; }
+  if (!e.target.classList.contains('f-cat')) return;
+  const row=e.target.closest('.case-row'), cs=state.cases.find(c=>c.id==row.dataset.id);
+  cs.cat=e.target.value; row.style.setProperty('--c', CATS[cs.cat].color); updateComputed();
+});
+caseList.addEventListener('click', e=>{
+  const b=e.target.closest('.f-del'); if(!b) return;
+  const id=b.closest('.case-row').dataset.id; state.cases=state.cases.filter(c=>c.id!=id);
+  renderCases(); updateComputed();
+});
+
+/* --- Drag & drop con pointer events (mouse, lápiz y touch) --- */
+let drag=null, suppressClick=false;
+const ph=document.createElement('div'); ph.className='drop-ph'; ph.textContent='Suelta aquí para agregar el caso';
+function insertionRef(y, skip){
+  for (const el of caseList.querySelectorAll('.case-row')){ if(el===skip) continue; const r=el.getBoundingClientRect(); if (y < r.top + r.height/2) return el; }
+  return null;
+}
+function autoScroll(y){ if (y<80) window.scrollBy(0,-16); else if (y>innerHeight-130) window.scrollBy(0,16); }
+caseList.addEventListener('pointerdown', e=>{
+  const h=e.target.closest('.handle'); if(!h || e.button>0) return;
+  e.preventDefault();
+  const row=h.closest('.case-row'); drag={type:'row', row};
+  row.classList.add('dragging'); document.body.classList.add('is-dragging');
+  try{ h.setPointerCapture(e.pointerId); }catch(_){}
+});
+$('#libItems').addEventListener('pointerdown', e=>{
+  suppressClick=false;
+  const it=e.target.closest('.pal-item'); if(!it || e.button>0 || e.pointerType==='touch') return;
+  drag={type:'lib', key:+it.dataset.key, x:e.clientX, y:e.clientY, started:false, src:it};
+  try{ it.setPointerCapture(e.pointerId); }catch(_){}
+});
+document.addEventListener('pointermove', e=>{
+  if (!drag) return;
+  if (drag.type==='row'){
+    e.preventDefault();
+    const ref=insertionRef(e.clientY, drag.row);
+    if (ref ? ref.previousElementSibling!==drag.row : caseList.lastElementChild!==drag.row) caseList.insertBefore(drag.row, ref);
+    autoScroll(e.clientY); return;
+  }
+  if (!drag.started){
+    if (Math.hypot(e.clientX-drag.x, e.clientY-drag.y) < 6) return;
+    drag.started=true;
+    drag.ghost=drag.src.cloneNode(true); drag.ghost.classList.add('ghost'); document.body.appendChild(drag.ghost);
+    document.body.classList.add('is-dragging'); $('#caseWrap').classList.add('drop-on');
+    const empty=caseList.querySelector('.case-empty'); if(empty) empty.remove();
+  }
+  drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px';
+  const wr=$('#caseWrap').getBoundingClientRect();
+  const inside = e.clientX>=wr.left-30 && e.clientX<=wr.right+30 && e.clientY>=wr.top-50 && e.clientY<=wr.bottom+50;
+  if (inside){ const ref=insertionRef(e.clientY); if (!ph.isConnected || ph.nextElementSibling!==ref) caseList.insertBefore(ph, ref); }
+  else if (ph.isConnected) ph.remove();
+  autoScroll(e.clientY);
+});
+function endDrag(){
+  if (!drag) return;
+  const d=drag; drag=null; document.body.classList.remove('is-dragging');
+  if (d.type==='row'){
+    d.row.classList.remove('dragging');
+    const order=[...caseList.querySelectorAll('.case-row')].map(r=>+r.dataset.id);
+    state.cases.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+    updateComputed(); return;
+  }
+  if (!d.started) return;
+  suppressClick=true;
+  d.ghost.remove(); $('#caseWrap').classList.remove('drop-on');
+  if (ph.isConnected){
+    const idx=[...caseList.children].filter(x=>x===ph || x.classList.contains('case-row')).indexOf(ph);
+    ph.remove(); addCase(LIBRARY[d.key], idx);
+  } else renderCases();
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+$('#libItems').addEventListener('click', e=>{
+  const it=e.target.closest('.pal-item'); if(!it) return;
+  if (suppressClick){ suppressClick=false; return; }
+  addCase(LIBRARY[+it.dataset.key], 0);
+});
+
+$('#aCat').innerHTML = catOptions('marketing');
+$('#aMon').addEventListener('input', e=>liveFormat(e.target));
+$('#aFac').addEventListener('input', e=>parseFactor(e.target));
+$('#addForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name=$('#aName').value.trim(); if(!name) return;
+  const facEl=$('#aFac'); const fac=facEl.value.trim()==='' ? 1 : parseFactor(facEl);
+  addCase({name, cat:$('#aCat').value, monthly:parseIntSafe($('#aMon').value), factor:fac, desc:$('#aDesc').value.trim()}, 0);
+  e.target.reset(); $('#aCat').value='marketing'; $('#aName').focus({preventScroll:true});
+});
+$('#loadDefaults').addEventListener('click', ()=>{ state.cases=DEFAULT_CASES.map(c=>({...c,id:uid++})); renderCases(); updateComputed(); });
+$('#clearCases').addEventListener('click', ()=>{ if(confirm('¿Vaciar todos los casos de uso?')){ state.cases=[]; renderCases(); updateComputed(); } });
+let rzT; window.addEventListener('resize', ()=>{ clearTimeout(rzT); rzT=setTimeout(growAll,150); });
+
+/* ===================== RECÁLCULO ===================== */
+function updateComputed(){
+  const R = calc(), P = periodTxt();
+  // filas casos
+  R.rows.forEach(row=>{
+    const tr = caseList.querySelector(`.case-row[data-id="${row.id}"]`); if(!tr) return;
+    tr.querySelector('.c-vol').innerHTML = row.monthly==null ? '<span class="badge b-tbd">tbd</span>' : f0(row.vol);
+    tr.querySelector('.c-rate').innerHTML = `<span class="badge b-${CATS[row.cat].cls}">${f2(row.rate)}</span>`;
+    tr.querySelector('.c-cr').textContent = fC(row.credits);
+    tr.querySelector('.c-usd').textContent = usd(row.usd);
+  });
+  const caseCr = R.rows.reduce((a,b)=>a+b.credits,0), caseVol=R.rows.reduce((a,b)=>a+b.vol,0), caseMon=R.rows.reduce((a,b)=>a+(b.monthly||0),0);
+  $('#fMon').textContent=f0(caseMon); $('#fVol').textContent=f0(caseVol); $('#fCr').textContent=fC(caseCr); $('#fUsd').textContent=usd(caseCr/1000*state.price);
+  const volLbl = state.period==='annual' ? 'Total facturable anual' : 'Total facturable mensual';
+  $('#thVol').textContent = state.period==='annual' ? 'anual' : 'mensual'; $('#fVolL').textContent = state.period==='annual' ? 'Facturables (anual)' : 'Facturables (mensual)';
+  $$('#caseList .cap-vol').forEach(x=>x.textContent=volLbl);
+
+  // resumen por categoría (orden del ejemplo: Marketing, Servicio, Utility, Authentication)
+  const r = R.r;
+  $('#thRate').textContent = `${r.iso==='OT'?'Other':r.iso} rate créditos`;
+  const showFree = R.cats.free.msgs>0;
+  $('#sumTable tbody').innerHTML = ORDER.filter(c=>c!=='free'||showFree).map(c=>{
+    const x=R.cats[c];
+    return `<tr><td><span class="badge b-${CATS[c].cls}">${CATS[c].icon} ${CATS[c].label}</span></td><td class="n">${f2(x.rate)}</td><td class="n">${f0(x.msgs)}</td><td class="n"><b>${fC(x.credits)}</b></td><td class="n">${usd(x.credits/1000*state.price)}</td></tr>`;
+  }).join('') + `<tr class="total"><td>Total</td><td></td><td class="n">${f0(R.msgs)}</td><td class="n">${fC(R.total)}</td><td class="n">${usd(R.usd)}</td></tr>`;
+  $('#resNote').textContent = `Periodo ${P} · ${r.es}`;
+
+  // barras
+  const max = Math.max(1,...BILLABLE.map(c=>R.cats[c].credits));
+  $('#bars').innerHTML = BILLABLE.map(c=>{ const x=R.cats[c], pct=R.total?x.credits/R.total*100:0;
+    return `<div class="bar"><span>${CATS[c].icon} ${CATS[c].label}</span><div class="track"><div class="fill" style="width:${x.credits/max*100}%;background:${CATS[c].color}"></div></div><b class="num">${pct.toFixed(1)}%</b></div>`; }).join('');
+
+  // KPIs
+  $('#kCr').textContent = fC(R.total);
+  $('#kPk').textContent = f2(R.packs);
+  $('#kPr').textContent = usd(state.price);
+  $('#kPkUp').textContent = f0(R.packsUp);
+  $('#kPkUpS').textContent = `Redondeo hacia arriba · ${usd(R.usdUp)}`;
+  $('#kUsd').textContent = usd(R.usd);
+  $('#kUsdS').textContent = state.period==='annual'
+    ? `${f2(R.packs)} paquetes × ${usd(state.price)} · ≈ ${usd(R.usd/12)} / mes`
+    : `${f2(R.packs)} paquetes × ${usd(state.price)} · ≈ ${usd(R.usd*12)} / año`;
+
+  // fórmula
+  const lines = BILLABLE.map(c=>{ const x=R.cats[c]; return `<span class="c">${CATS[c].label.padEnd(15,' ')}</span> ${f2(x.rate).padStart(7,' ')} × ${f0(x.msgs).padStart(11,' ')} msjs = <span class="hl">${fC(x.credits).padStart(14,' ')}</span> créditos`; });
+  $('#formula').innerHTML = `<div style="white-space:pre">${lines.join('\n')}
+${'─'.repeat(64)}
+<span class="c">Total créditos</span>                                  = <span class="hl">${fC(R.total).padStart(14,' ')}</span>
+<span class="c">Paquetes</span>        ${fC(R.total)} ÷ 1,000            = <span class="hl">${f2(R.packs)}</span>
+<span class="c">Total USD</span>       ${f2(R.packs)} × ${usd(state.price)}           = <span class="ok">${usd(R.usd)}</span></div>`;
+
+  // sticky
+  $('#sCountry').textContent = `${r.flag} ${r.es}`;
+  $('#sCr').textContent = fC(R.total);
+  $('#sPk').textContent = f2(R.packs);
+  $('#sUsd').textContent = usd(R.usd);
+
+  renderExamples();
+  schedulePDF();
+}
+
+/* ===================== INPUTS GLOBALES ===================== */
+$('#client').addEventListener('input', e=>{ state.client=e.target.value; schedulePDF(); });
+$('#price').addEventListener('input', e=>{
+  let v = parseFloat(e.target.value); if (isNaN(v)||v<0){ v=0; if(e.target.value.trim().startsWith('-')) e.target.value='0'; }
+  state.price=v; renderCatCards(); updateComputed();
+});
+$$('.chip[data-price]').forEach(b=>b.addEventListener('click', ()=>{ $('#price').value=parseFloat(b.dataset.price).toFixed(2); $('#price').dispatchEvent(new Event('input')); }));
+$$('.seg button').forEach(b=>b.addEventListener('click', ()=>{
+  state.period=b.dataset.period; $$('.seg button').forEach(x=>x.setAttribute('aria-pressed', x===b)); updateComputed();
+}));
+
+/* ===================== EJEMPLOS (5 casos) ===================== */
+const EXAMPLES = [
+  { cat:'marketing', title:'1 · Plantilla de Marketing', sub:'Promoción de pastillas de freno + cita de taller para instalarlas',
+    story:'La empresa envía una oferta a un cliente con opt-in. El cliente se interesa, agenda la instalación en el taller y recibe confirmación, recordatorio, aviso de vehículo listo y encuesta.',
+    msgs:[
+      {from:'biz',charge:'marketing',text:'🔧 Hola Carlos, esta semana tu Toyota Hilux tiene <b>20% de descuento</b> en el juego de pastillas de freno delanteras. ¿Quieres aprovecharlo?',btns:['Ver oferta','Agendar instalación']},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'Me interesa. ¿Ustedes me las instalan?'},
+      {sys:'Se abre la Customer Service Window de 24 h'},
+      {from:'biz',charge:'service',text:'¡Claro! La instalación en nuestro taller toma unos 45 minutos e incluye revisión del sistema de frenos. ¿Qué día te queda mejor?'},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'¿Tienen espacio el sábado en la mañana?'},
+      {from:'biz',charge:'service',text:'Para el sábado 14 tenemos 8:00, 9:30 y 11:00 a.m. en Sucursal Centro. ¿Cuál prefieres?',btns:['8:00 a.m.','9:30 a.m.','11:00 a.m.']},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'9:30 a.m., por favor'},
+      {from:'biz',charge:'service',text:'Perfecto. ¿Me confirmas la placa del vehículo para registrar la cita?'},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'Es la ABC123'},
+      {from:'biz',charge:'utility',text:'✅ Cita <b>#4512</b> confirmada · Sábado 14, 9:30 a.m. · Sucursal Centro · Servicio: instalación de pastillas de freno delanteras.',btns:['Agregar al calendario','Reprogramar']},
+      {sys:'Viernes 13 · la ventana de 24 h ya cerró'},
+      {from:'biz',charge:'utility',text:'⏰ Recordatorio: tu cita #4512 es mañana a las 9:30 a.m. en Sucursal Centro.',btns:['Confirmar','Reprogramar']},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'Confirmar'},
+      {sys:'Sábado 14 · día de la cita'},
+      {from:'biz',charge:'utility',text:'🚗 Tu Toyota Hilux está listo. Ya puedes retirarlo en recepción.',btns:['Ver factura']},
+      {from:'biz',charge:'utility',text:'¿Cómo calificarías el servicio de hoy?',btns:['⭐ 1-2','⭐ 3','⭐ 4-5']}
+    ],
+    scale:{label:'Campaña a 10,000 clientes; si el 10% agenda la instalación (1,000 conversaciones como esta):', items:[['marketing',10000],['service',3000],['utility',4000]]},
+    notes:['La plantilla de Marketing siempre se cobra.','Las respuestas del asesor (free-form) se facturan como Service, y las plantillas Utility (confirmación, recordatorio, vehículo listo y encuesta) se facturan aunque la ventana de 24 h esté abierta.','Tip: no repitas el descuento en la confirmación de la cita; si la plantilla menciona la oferta, Meta la clasifica como Marketing.']},
+  { cat:'service', title:'2 · Mensajes de Servicio (free-form)', sub:'El cliente pregunta por un repuesto',
+    story:'El cliente inicia la conversación. Todo lo que escribe es gratis; cada respuesta de la empresa (agente o Agentforce) es un mensaje Service.',
+    msgs:[
+      {from:'user',charge:null,why:'Inbound: gratis',text:'Hola, ¿tienen filtro de aceite para Hyundai Tucson 2019?'},
+      {sys:'Se abre la ventana de servicio de 24 h'},
+      {from:'biz',charge:'service',text:'¡Hola! Sí, tenemos dos marcas en stock. ¿Lo prefieres para retiro o envío?'},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'Envío a Heredia, por favor'},
+      {from:'biz',charge:'service',text:'Perfecto, llega mañana. Te comparto el enlace de pago 👇',btns:['Pagar ahora']}
+    ],
+    scale:{label:'25,000 conversaciones / mes × 2 respuestas = 50,000 mensajes Service', items:[['service',50000]]},
+    notes:['Las respuestas free-form enviadas dentro de la Customer Service Window se facturan con el multiplicador Service.','Por eso “Recepción de mensajes” es el mayor volumen en la tabla del cliente.']},
+  { cat:'authentication', title:'3 · Plantilla de Autenticación (OTP)', sub:'Inicio de sesión en la app',
+    story:'La empresa envía un código de un solo uso. Si el usuario pide reenvío, es un segundo mensaje y un segundo cargo.',
+    msgs:[
+      {from:'biz',charge:'authentication',text:'Tu código de verificación es <b>482913</b>. No lo compartas. Expira en 10 minutos.',btns:['Copiar código']},
+      {sys:'El usuario no ingresó el código y pidió reenvío'},
+      {from:'biz',charge:'authentication',text:'Tu nuevo código de verificación es <b>930417</b>. Expira en 10 minutos.',btns:['Copiar código']}
+    ],
+    scale:{label:'5,000 inicios de sesión / mes con 1 OTP cada uno', items:[['authentication',5000]]},
+    notes:['Cada OTP entregado es un cargo independiente.','En muchos países Authentication tiene el mismo multiplicador que Utility.']},
+  { cat:'utility', title:'4 · Plantillas Utility', sub:'Notificaciones de última milla de un pedido',
+    story:'Tres actualizaciones transaccionales del mismo pedido. Aunque la ventana de 24 h esté abierta, cada plantilla Utility se factura.',
+    msgs:[
+      {from:'biz',charge:'utility',text:'📦 Tu pedido <b>#48213</b> está en preparación. Te avisaremos cuando salga.'},
+      {from:'biz',charge:'utility',text:'🚚 Tu pedido #48213 va en camino. Llegada estimada: 3:00 p.m.',btns:['Rastrear pedido']},
+      {from:'biz',charge:'utility',text:'✅ Pedido #48213 entregado. ¡Gracias por tu compra!',btns:['Ver comprobante']},
+      {from:'user',charge:null,why:'Inbound: gratis',text:'¡Recibido, gracias!'}
+    ],
+    scale:{label:'10,000 pedidos / mes × 3 notificaciones = 30,000 mensajes Utility', items:[['utility',30000]]},
+    notes:['Sin lenguaje promocional + datos del pedido + CTA de resolución = Utility (ver directrices).','Si se agrega “aprovecha 10% en tu próxima compra”, Meta la reclasifica como Marketing.']},
+  { cat:'mixed', title:'5 · Recorrido completo (UCP) vs. Free Entry Point', sub:'El mismo cliente, dos formas de iniciar la conversación',
+    story:'Recorrido unificado en un solo número: oferta → consulta → compra → confirmación. A la izquierda iniciado por la empresa; a la derecha iniciado desde un anuncio Click-to-WhatsApp.',
+    paths:[
+      {title:'A · Iniciado por la empresa', msgs:[
+        {from:'biz',charge:'marketing',text:'📣 Llantas 4×4 con 15% de descuento este fin de semana.',btns:['Ver modelos']},
+        {from:'user',charge:null,why:'Inbound: gratis',text:'¿Tienen 265/70 R16?'},
+        {from:'biz',charge:'service',text:'Sí, tenemos 3 marcas. ¿Te envío opciones?'},
+        {from:'biz',charge:'service',text:'Aquí tienes el enlace de compra 👇'},
+        {from:'biz',charge:'utility',text:'✅ Compra confirmada, pedido #50110.'}
+      ]},
+      {title:'B · Desde anuncio Click-to-WhatsApp', msgs:[
+        {from:'user',charge:null,why:'Inbound desde anuncio: gratis',text:'Vi el anuncio de llantas, ¿tienen 265/70 R16?'},
+        {sys:'La empresa responde en < 24 h → se abre la ventana Free Entry Point (hasta 7 días)'},
+        {from:'biz',charge:'free',why:'Free-form dentro de la ventana de 24 h',text:'Sí, tenemos 3 marcas. ¿Te envío opciones?'},
+        {from:'biz',charge:'free',why:'Free-form dentro de la ventana de 24 h',text:'Aquí tienes el enlace de compra 👇'},
+        {from:'biz',charge:'free',why:'Plantilla dentro de Free Entry Point',text:'✅ Compra confirmada, pedido #50110.'},
+        {from:'biz',charge:'free',why:'Plantilla dentro de Free Entry Point (día 5)',text:'📣 ¿Necesitas alineación para tus llantas nuevas?'}
+      ]}
+    ],
+    notes:['El anuncio Click-to-WhatsApp se paga como Ads estándar; los mensajes de la ventana Free Entry Point no consumen créditos.','Los free-form se pueden enviar mientras la ventana de servicio de 24 h esté abierta (24 h desde el último mensaje del usuario).']}
+];
+function chargeTag(m, r){
+  if (!m.charge || m.charge==='free') return `<div class="charge"><span class="free">● Sin cargo</span><span class="muted">${esc(m.why||'')}</span></div>`;
+  const k=CATS[m.charge], mult=r[m.charge];
+  return `<div class="charge"><span class="badge b-${k.cls}">${k.icon} ${k.label}</span><span>−${f2(mult)} créditos</span><span class="muted">≈ $${f4(mult*state.price/1000)}</span></div>`;
+}
+function phone(msgs, r, title){
+  return `<div class="phone">${title?`<div class="ph-title">${esc(title)}</div>`:''}${msgs.map(m=> m.sys
+    ? `<div class="sysnote">${esc(m.sys)}</div>`
+    : `<div class="msg ${m.from}">${m.text}${m.btns?`<div class="btns">${m.btns.map(b=>`<span>${esc(b)}</span>`).join('')}</div>`:''}${chargeTag(m,r)}</div>`).join('')}</div>`;
+}
+function tally(msgs, r){
+  const t={}; msgs.forEach(m=>{ if(m.charge&&m.charge!=='free') t[m.charge]=(t[m.charge]||0)+1; });
+  let cr=0; const rows=Object.entries(t).map(([c,n])=>{ const x=n*r[c]; cr+=x; return `<tr><td><span class="badge b-${CATS[c].cls}">${CATS[c].label}</span></td><td class="n">${n} × ${f2(r[c])}</td><td class="n">${fC(x)}</td><td class="n">$${f4(x*state.price/1000)}</td></tr>`; });
+  const free = msgs.filter(m=>!m.sys && (!m.charge||m.charge==='free')).length;
+  return {cr, html:`<div class="tbl-wrap calcbox"><table><thead><tr><th>Categoría</th><th class="n">Msjs × mult.</th><th class="n">Créditos</th><th class="n">USD</th></tr></thead><tbody>${rows.join('')||'<tr><td colspan="4" class="muted">Ningún mensaje con cargo</td></tr>'}<tr><td colspan="4" class="muted">${free} mensaje(s) sin cargo</td></tr><tr class="tot"><td>Total conversación</td><td></td><td class="n">${fC(cr)}</td><td class="n">$${f4(cr*state.price/1000)}</td></tr></tbody></table></div>`};
+}
+function renderExamples(){
+  const r=country();
+  $('#exCtx').textContent = `${r.flag} ${r.es} · ${usd(state.price)} por paquete de 1,000 créditos`;
+  $('#examples').innerHTML = EXAMPLES.map(ex=>{
+    const color = ex.cat==='mixed' ? 'linear-gradient(135deg,#032D60,#0176D3)' : CATS[ex.cat].color;
+    let left, right;
+    if (ex.paths){
+      const A=tally(ex.paths[0].msgs,r), B=tally(ex.paths[1].msgs,r);
+      left = `<div class="vs">${phone(ex.paths[0].msgs,r,ex.paths[0].title)}${phone(ex.paths[1].msgs,r,ex.paths[1].title)}</div>`;
+      right = `<h4>${esc(ex.paths[0].title)}</h4>${A.html}<h4 style="margin-top:12px">${esc(ex.paths[1].title)}</h4>${B.html}
+        <div class="callout ok"><b>Ahorro por conversación:</b> ${fC(A.cr-B.cr)} créditos (≈ $${f4((A.cr-B.cr)*state.price/1000)}). En 10,000 conversaciones: <b>${usd((A.cr-B.cr)*10000*state.price/1000)}</b>.</div>`;
+    } else {
+      const T=tally(ex.msgs,r);
+      const sc = ex.scale.items.reduce((a,[c,n])=>a+n*r[c],0);
+      left = phone(ex.msgs,r);
+      right = `<h4>Cálculo de esta conversación</h4>${T.html}
+        <h4 style="margin-top:14px">A escala</h4>
+        <div class="formula" style="font-size:.8rem">${esc(ex.scale.label)}<br>${ex.scale.items.map(([c,n])=>`${f0(n)} × ${f2(r[c])} = <span class="hl">${fC(n*r[c])}</span> créditos`).join('<br>')}<br>${fC(sc)} ÷ 1,000 = ${f2(sc/1000)} paquetes × ${usd(state.price)} = <span class="ok">${usd(sc/1000*state.price)}</span></div>`;
+    }
+    return `<article class="ex">
+      <div class="ex-head" style="background:${color}"><h3>${esc(ex.title)}</h3><p>${esc(ex.sub)} — ${esc(ex.story)}</p></div>
+      <div class="ex-body"><div>${left}</div><div>${right}<ul class="tight" style="margin-top:10px">${ex.notes.map(n=>`<li><small>${esc(n)}</small></li>`).join('')}</ul></div></div>
+    </article>`;
+  }).join('');
+}
+
+/* ===================== PLANTILLAS (tab 3) ===================== */
+$('#tplCards').innerHTML = [
+  {c:'utility', title:'Utility (Utilidad)', uses:['Recordatorios de citas','Alertas de pago','Gestión y estado de pedidos','Confirmaciones de compra','Actualizaciones importantes'], extra:'Beneficios: mejora la experiencia del cliente, aumenta la seguridad y la confianza, potencia el retorno de la inversión.'},
+  {c:'authentication', title:'Authentication (Autenticación)', uses:['Creación de nueva cuenta','Recuperación de cuenta','Nuevos pedidos / transacciones (autenticación en checkout)','Pedidos o transacciones existentes (verificación en entrega)'], extra:'Beneficio: reduce fricción y protege ingresos nuevos y existentes.'},
+  {c:'marketing', title:'Marketing', uses:['Ofertas promocionales','Recordatorios de carrito abandonado','Recomendaciones de producto','Reenganche (re-engagement) a gran escala'], extra:'Beneficios: impulsar ingresos, fomentar fidelidad, incrementar el Customer Lifetime Value (CLV), entrega optimizada con IA. Requiere opt-in explícito (a diferencia de los anuncios).<br><br><b>Marketing Messages Lite (MM Lite API):</b> clientes de Marketing Cloud Engagement con ambos pools de 1,000 créditos pagan el mismo multiplicador de Marketing estándar; en reportes de uso aparece como “WhatsApp Marketing Lite Conversation”.'},
+  {c:'service', title:'Service (Servicio)', uses:['Atención al cliente','Atención para la venta','Atención posventa','Reducción del costo de atención mediante automatización','Chat a gran escala'], extra:'Pueden ser iniciados por la empresa o por el cliente. Los mensajes free-form enviados dentro de la ventana de 24 h se facturan.'}
+].map(x=>{ const k=CATS[x.c]; return `<div class="catcard" style="--c:${k.color}">
+  <div class="head" style="font-size:1.1rem">${k.icon} ${x.title} <span class="badge b-${k.cls}" style="margin-left:auto">${k.label}</span></div>
+  <p style="margin-top:8px"><b>Definición:</b> ${esc(k.def)}</p>
+  <b>Casos de uso</b><ul class="tight">${x.uses.map(u=>`<li>${u}</li>`).join('')}</ul>
+  <p style="margin-top:8px"><small>${x.extra}</small></p></div>`; }).join('');
+
+/* ===================== REFERENCIA (tab 6) ===================== */
+function renderRef(){
+  const q=norm($('#refSearch').value.trim());
+  const list = RATES.filter(r=>!q||r.key.includes(q));
+  $('#refCount').textContent = `${list.length} de ${RATES.length} filas.`;
+  $('#refTable tbody').innerHTML = list.map(r=>`<tr class="clk ${r.iso===state.iso?'cur':''}" data-iso="${r.iso}"><td><b>${r.iso==='OT'?'—':r.iso}</b></td><td>${r.flag} ${esc(r.es)} <small class="muted">${r.es!==r.market?'· '+esc(r.market):''}</small></td><td class="n">${f2(r.marketing)}</td><td class="n">${f2(r.utility)}</td><td class="n">${f2(r.authentication)}</td><td class="n">${f2(r.service)}</td></tr>`).join('');
+}
+$('#refSearch').addEventListener('input', renderRef);
+$('#refTable').addEventListener('click', e=>{ const tr=e.target.closest('tr[data-iso]'); if(!tr) return; setCountry(tr.dataset.iso); selectTab($('#t-calc')); window.scrollTo({top:0,behavior:'smooth'}); });
+
+/* ===================== TABS ===================== */
+const tabs=$$('.tab');
+function selectTab(t){
+  tabs.forEach(x=>{ const on=x===t; x.setAttribute('aria-selected',on); x.tabIndex=on?0:-1; const p=document.getElementById(x.getAttribute('aria-controls')); p.hidden=!on; if(on){ p.classList.remove('anim'); void p.offsetWidth; p.classList.add('anim'); } });
+  t.scrollIntoView({block:'nearest',inline:'nearest'});
+  if (t.id==='t-calc') requestAnimationFrame(growAll);
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>selectTab(t));
+  t.addEventListener('keydown',e=>{
+    let j=null; if(e.key==='ArrowRight') j=(i+1)%tabs.length; if(e.key==='ArrowLeft') j=(i-1+tabs.length)%tabs.length; if(e.key==='Home') j=0; if(e.key==='End') j=tabs.length-1;
+    if(j!=null){ e.preventDefault(); tabs[j].focus(); selectTab(tabs[j]); }
+  });
+});
+
+/* ===================== PDF ===================== */
+let pdfBlobUrl=null, pdfTimer=null;
+const pdfSafe = s => String(s??'').replace(/[–—]/g,'-').replace(/→/g,'->').replace(/×/g,'x').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[^\x00-\xFF]/g,'').trim();
+function pdfReady(){ return !!(window.jspdf && window.jspdf.jsPDF); }
+function schedulePDF(){
+  clearTimeout(pdfTimer);
+  $('#pdfStat').textContent = pdfReady() ? 'Actualizando PDF…' : 'PDF: se usará la impresión del navegador';
+  pdfTimer=setTimeout(regenPDF,450);
+}
+function buildPDF(){
+  const J=window.jspdf.jsPDF; const doc=new J({unit:'pt',format:'a4'});
+  if (typeof doc.autoTable!=='function') return null;
+  const R=calc(), r=R.r, W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=36;
+  const date=new Date().toLocaleDateString('es-CR',{year:'numeric',month:'long',day:'numeric'});
+  // Encabezado
+  doc.setFillColor(3,45,96); doc.rect(0,0,W,74,'F'); doc.setFillColor(1,118,211); doc.rect(0,74,W,4,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(17);
+  doc.text('Salesforce - Calculadora de créditos de WhatsApp',M,34);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  doc.text('Salesforce Message Credits - WhatsApp  |  Rate Card vigente desde el 1 de noviembre de 2026',M,54);
+  // Datos generales
+  doc.autoTable({startY:92,margin:{left:M,right:M},theme:'plain',styles:{fontSize:9.5,cellPadding:3},
+    columnStyles:{0:{fontStyle:'bold',textColor:[92,92,92],cellWidth:120},2:{fontStyle:'bold',textColor:[92,92,92],cellWidth:120}},
+    body:[
+      ['Cliente',pdfSafe(state.client)||'-','Fecha',date],
+      ['País destinatario',pdfSafe(`${r.es} (${r.iso==='OT'?'Other':r.iso})`),'Periodo',state.period==='annual'?'Anual (mensual x 12)':'Mensual'],
+      ['Valor del paquete',`${usd(state.price)} USD / 1,000 créditos`,'SKU','Salesforce Message Credits - WhatsApp (1,000)']
+    ]});
+  // Multiplicadores
+  doc.autoTable({startY:doc.lastAutoTable.finalY+6,margin:{left:M,right:M},theme:'grid',
+    head:[['Multiplicador '+(r.iso==='OT'?'Other':r.iso),'Marketing','Utility','Authentication','Service']],
+    body:[['Créditos por mensaje',f2(r.marketing),f2(r.utility),f2(r.authentication),f2(r.service)],
+          ['USD por mensaje','$'+f4(r.marketing*state.price/1000),'$'+f4(r.utility*state.price/1000),'$'+f4(r.authentication*state.price/1000),'$'+f4(r.service*state.price/1000)]],
+    styles:{fontSize:9,halign:'right'},columnStyles:{0:{halign:'left',fontStyle:'bold'}},headStyles:{fillColor:[3,45,96],halign:'right'}});
+  // Casos de uso
+  doc.setTextColor(3,45,96); doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  let y=doc.lastAutoTable.finalY+22; doc.text('Desglose por caso de uso',M,y);
+  doc.autoTable({startY:y+6,margin:{left:M,right:M},theme:'striped',
+    head:[['#','Caso de uso','Plantilla','Msjs/mes','Factor msjs/conv.',state.period==='annual'?'Facturables (anual)':'Facturables (mes)','Mult.','Créditos','USD']],
+    body:R.rows.map((x,i)=>[i+1,pdfSafe(x.name),pdfSafe(CATS[x.cat].label),x.monthly==null?'tbd':f0(x.monthly),fF(x.factor ?? 1),f0(x.vol),f2(x.rate),fC(x.credits),usd(x.usd)])
+      .concat(BILLABLE.filter(c=>state.extra[c]).map(c=>['+','Volumen adicional (sin caso de uso)',CATS[c].label,f0(state.extra[c]),'1',f0(state.extra[c]*periodMult()),f2(r[c]),fC(state.extra[c]*periodMult()*r[c]),usd(state.extra[c]*periodMult()*r[c]/1000*state.price)])),
+    styles:{fontSize:8.5,cellPadding:4},headStyles:{fillColor:[1,118,211]},
+    columnStyles:{0:{cellWidth:18},1:{cellWidth:140},3:{halign:'right'},4:{halign:'right'},5:{halign:'right'},6:{halign:'right'},7:{halign:'right'},8:{halign:'right'}},
+    didParseCell:d=>{ if(d.section==='body'&&d.column.index===2){ const c=Object.values(CATS).find(k=>pdfSafe(k.label)===d.cell.raw); if(c){ d.cell.styles.textColor=c.rgb; d.cell.styles.fontStyle='bold'; } } }});
+  // Resumen por categoría
+  y=doc.lastAutoTable.finalY+22;
+  if (y>H-260){ doc.addPage(); y=50; }
+  doc.setTextColor(3,45,96); doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Resumen por tipo de plantilla',M,y);
+  const cats=ORDER.filter(c=>c!=='free'||R.cats.free.msgs>0);
+  doc.autoTable({startY:y+6,margin:{left:M,right:M},theme:'grid',
+    head:[['Tipo de plantilla',(r.iso==='OT'?'Other':r.iso)+' rate créditos','Total de mensajes','Total de créditos necesarios','USD']],
+    body:cats.map(c=>[pdfSafe(CATS[c].label),f2(R.cats[c].rate),f0(R.cats[c].msgs),fC(R.cats[c].credits),usd(R.cats[c].credits/1000*state.price)]),
+    foot:[['Total','',f0(R.msgs),fC(R.total),usd(R.usd)]],
+    styles:{fontSize:9.5,halign:'right'},columnStyles:{0:{halign:'left',fontStyle:'bold'}},
+    headStyles:{fillColor:[1,118,211],halign:'right'},footStyles:{fillColor:[3,45,96],textColor:255,halign:'right'}});
+  // Totales destacados
+  y=doc.lastAutoTable.finalY+16; const bw=(W-2*M-24)/4;
+  [['Total créditos',fC(R.total)],['Paquetes necesarios',f2(R.packs)],['Valor del paquete',usd(state.price)],['TOTAL USD',usd(R.usd)]].forEach(([k,v],i)=>{
+    const x=M+i*(bw+8); const hl=i===3;
+    doc.setFillColor(...(hl?[1,118,211]:[234,245,254])); doc.roundedRect(x,y,bw,52,6,6,'F');
+    doc.setTextColor(...(hl?[255,255,255]:[92,92,92])); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.text(k.toUpperCase(),x+10,y+17);
+    doc.setTextColor(...(hl?[255,255,255]:[3,45,96])); doc.setFontSize(14); doc.text(v,x+10,y+39);
+  });
+  y+=66;
+  doc.setTextColor(60,60,60); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  const notes=[
+    `Fórmula: mensajes facturables = mensajes/mes x factor de más mensajes en cada conversación; créditos = multiplicador país x mensajes facturables; paquetes = total créditos / 1,000; total USD = paquetes x valor del paquete. Paquetes a comprar (redondeo hacia arriba): ${f0(R.packsUp)} = ${usd(R.usdUp)}.`,
+    'Los mensajes que el cliente envía a la empresa son gratis; se cobran las respuestas de la empresa. Meta cobra estas respuestas desde el 1-oct-2026 y Salesforce las factura desde el 1-nov-2026 (sin cobro retroactivo). Los mensajes Utility (plantilla) y Service (free-form) enviados dentro de la Customer Service Window de 24 h se facturan.',
+    'Referencia: Salesforce Message Credits - WhatsApp Rate Card, vigente desde el 1 de noviembre de 2026. SKUs: 200008690 (Salesforce Message Credits - WhatsApp) / 200008691 (Salesforce Message Credits - WhatsApp for Marketing). Ambos comparten rate card y los créditos son fungibles (una sola bolsa de créditos).',
+    'Meta determina las categorías de mensaje según el contenido y el propósito. Multiplicadores, países y tipos de uso sujetos a cambio sin previo aviso.',
+    'IMPORTANTE: este documento es solo una estimación. El consumo real depende de la categoría asignada por Meta, del país de cada destinatario y de los mensajes efectivamente entregados. El cliente puede llevar el control de su consumo real en el Digital Wallet de su org de Salesforce.',
+    'Más información: https://www.salesforce.com/marketing/salesforce-message-credits/'
+  ];
+  notes.forEach(n=>{ const lines=doc.splitTextToSize(pdfSafe(n),W-2*M); if(y+lines.length*11>H-40){ doc.addPage(); y=50; } doc.text(lines,M,y); y+=lines.length*11+5; });
+  // Pie en todas las páginas
+  const pages=doc.getNumberOfPages();
+  for(let p=1;p<=pages;p++){ doc.setPage(p); doc.setDrawColor(229,229,229); doc.line(M,H-30,W-M,H-30); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+    doc.text('Multiplicadores, países y tipos de uso sujetos a cambio sin previo aviso. Fuente: Salesforce Message Credits - WhatsApp Rate Card (vigente desde el 1 de noviembre de 2026).',M,H-18,{maxWidth:W-2*M-50});
+    doc.text(`${p}/${pages}`,W-M,H-18,{align:'right'}); }
+  return doc;
+}
+function regenPDF(){
+  if (!pdfReady()){ $('#pdfStat').textContent='PDF: se usará la impresión del navegador'; return; }
+  try{
+    const doc=buildPDF(); if(!doc){ $('#pdfStat').textContent='PDF: se usará la impresión del navegador'; return; }
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    pdfBlobUrl = URL.createObjectURL(doc.output('blob'));
+    $('#pdfStat').textContent = 'PDF actualizado · '+new Date().toLocaleTimeString('es-CR');
+  }catch(err){ console.error(err); $('#pdfStat').textContent='Error generando PDF'; }
+}
+$('#dlPdf').addEventListener('click', ()=>{
+  regenPDF();
+  if (!pdfBlobUrl || !pdfReady()){ window.print(); return; }
+  const r=country(); const name=`Creditos_WhatsApp_${(state.client||'cliente').replace(/[^\w-]+/g,'_')}_${r.iso}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const a=document.createElement('a'); a.href=pdfBlobUrl; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+});
+window.addEventListener('load', schedulePDF);
+
+/* ===================== INIT ===================== */
+function renderAll(){ renderCatCards(); renderCases(); updateComputed(); renderRef(); }
+renderComboBtn(); renderLibrary(); renderAll();
+</script>
+</body>
+</html>
